@@ -3,7 +3,7 @@
 """
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from config import DARK_COLORS, PLOTLY_TEMPLATE, CHART_CONFIG
+from config import DARK_COLORS, PLOTLY_TEMPLATE, PLOTLY_CONFIG, optimize_chart_data
 
 def with_a11y(fig, description, chart_type="chart"):
     """グラフにアクセシビリティメタデータを追加
@@ -637,7 +637,7 @@ def create_dual_sparkline(actual_values, budget_values, achievement_rate, height
         return dcc.Graph(
             figure=fig,
             style={'height': '100%', 'width': f'{width}px'},
-            config={'displayModeBar': False, 'staticPlot': not enable_hover}
+            config={**PLOTLY_CONFIG, 'staticPlot': not enable_hover}
         )
     
     # 月のラベルを生成（1月から12月まで）
@@ -744,7 +744,7 @@ def create_dual_sparkline(actual_values, budget_values, achievement_rate, height
     return dcc.Graph(
         figure=fig,
         style={'height': f'{height}px', 'width': f'{width}px'},
-        config={'displayModeBar': False, 'staticPlot': not enable_hover}
+        config={**PLOTLY_CONFIG, 'staticPlot': not enable_hover}
     )
 
 def create_stacked_bar_chart(categories, data_dict, selected_category=None, height=None, horizontal=False, comparison_mode=False, value_type='currency'):

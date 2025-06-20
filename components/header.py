@@ -4,6 +4,7 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 from config import DARK_COLORS, LAYOUT
+from .loading import create_inline_loading_text
 
 def create_header():
     """ヘッダーコンポーネントを作成"""
@@ -166,16 +167,19 @@ def create_header():
                     }, 
                     style={'marginRight': '24px', 'display': 'none'}),  # 初期は非表示
                     
-                    # 最終更新時刻
-                    html.Span(id='last-update', 
-                        **{
-                            'role': 'status',
-                            'aria-live': 'polite',
-                            'aria-label': '最終更新時刻'
-                        },
+                    # 最終更新時刻（ローディング表示対応）
+                    html.Div(id='last-update-container',
+                        children=html.Span(id='last-update', 
+                            **{
+                                'role': 'status',
+                                'aria-live': 'polite',
+                                'aria-label': '最終更新時刻'
+                            },
+                            style={
+                                'color': DARK_COLORS['text_muted'],
+                                'fontSize': '0.75rem'
+                            }),
                         style={
-                            'color': DARK_COLORS['text_muted'],
-                            'fontSize': '0.75rem',
                             'marginLeft': 'auto',
                             'marginRight': '20px'
                         }),

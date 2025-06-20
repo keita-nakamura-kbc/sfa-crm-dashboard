@@ -3,7 +3,7 @@ Tab2: 売上・獲得分析レイアウト（新構成）
 """
 from dash import dcc, html
 import dash_bootstrap_components as dbc
-from config import DARK_COLORS, LAYOUT
+from config import DARK_COLORS, LAYOUT, PLOTLY_CONFIG
 from components.cards import create_section_card, make_scroll_card
 
 def create_revenue_acquisition_layout():
@@ -35,7 +35,7 @@ def create_revenue_acquisition_layout():
                     html.Div([
                         dcc.Graph(id='main-trend-chart', 
                                  style={'height': '100%', 'minHeight': '0'},
-                                 config={'displayModeBar': False, 'responsive': True})
+                                 config=PLOTLY_CONFIG)
                     ], **{
                         'aria-label': 'メイントレンドグラフ',
                         'role': 'img'
@@ -154,7 +154,7 @@ def create_revenue_acquisition_layout():
                             html.Div([
                                 dcc.Graph(id='composition-channel-chart',
                                          style={'height': '100%', 'minHeight': '0'},
-                                         config={'displayModeBar': False, 'responsive': True})
+                                         config=PLOTLY_CONFIG)
                             ], className='p-m', style={'flex': '1 1 auto', 'minHeight': '0'})
                         ], 
                         className='card-base',
@@ -184,7 +184,7 @@ def create_revenue_acquisition_layout():
                             html.Div([
                                 dcc.Graph(id='composition-app-chart',
                                          style={'height': '100%', 'minHeight': '0'},
-                                         config={'displayModeBar': False, 'responsive': True})
+                                         config=PLOTLY_CONFIG)
                             ], className='p-m', style={'flex': '1 1 auto', 'minHeight': '0'})
                         ], 
                         className='card-base',

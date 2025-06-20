@@ -14,6 +14,7 @@ from components.cards import (
     create_performance_card, create_insight_card, get_performance_color
 )
 from components.charts import create_trend_chart, create_horizontal_bar_chart, create_stacked_bar_chart
+from components.loading import create_chart_loading_placeholder, create_skeleton_card
 from config import DARK_COLORS, THRESHOLDS
 
 def register_tab2_callbacks(app):

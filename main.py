@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 from config import DARK_COLORS, LAYOUT, ANIMATIONS
 from data_manager import data_manager, get_dataframe_from_store, get_last_data_month, clean_channel_names, clean_plan_names
 from components.header import create_header
+from components.loading import create_inline_loading_text
 from layouts.tab1_funnel import create_funnel_analysis_layout
 from layouts.tab2_revenue import create_revenue_acquisition_layout
 from callbacks.tab1_callbacks import register_tab1_callbacks
@@ -149,7 +150,7 @@ app.index_string = f'''
                 color: {DARK_COLORS['text_primary']};
             }}
 
-            /* ドロップダウン */
+            /* ドロップダウン - 改善版 */
             .dark-dropdown {{
                 background-color: {DARK_COLORS['bg_card']} !important;
                 border: 1px solid {DARK_COLORS['border_color']} !important;
@@ -160,6 +161,130 @@ app.index_string = f'''
                 background-color: {DARK_COLORS['bg_card']} !important;
                 border: 1px solid {DARK_COLORS['border_color']} !important;
                 color: {DARK_COLORS['text_secondary']} !important;
+            }}
+
+            /* ドロップダウンメニューのオプション */
+            .Select-menu-outer {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                border: 1px solid {DARK_COLORS['border_light']} !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            }}
+
+            .Select-menu {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+            }}
+
+            .Select-option {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                color: {DARK_COLORS['text_secondary']} !important;
+                padding: 8px 12px !important;
+            }}
+
+            .Select-option:hover,
+            .Select-option.is-focused {{
+                background-color: {DARK_COLORS['bg_hover']} !important;
+                color: {DARK_COLORS['text_primary']} !important;
+            }}
+
+            .Select-option.is-selected {{
+                background-color: {DARK_COLORS['primary_orange']} !important;
+                color: {DARK_COLORS['text_primary']} !important;
+            }}
+
+            /* React-Select v2+ 用の新しいクラス */
+            .css-26l3qy-menu {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                border: 1px solid {DARK_COLORS['border_light']} !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            }}
+
+            .css-4ljt47-MenuList {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+            }}
+
+            .css-9jq23d {{
+                color: {DARK_COLORS['text_secondary']} !important;
+            }}
+
+            .css-1uccc91-singleValue {{
+                color: {DARK_COLORS['text_secondary']} !important;
+            }}
+
+            .css-1wa3eu0-placeholder {{
+                color: {DARK_COLORS['text_muted']} !important;
+            }}
+
+            /* Dash Dropdown 専用スタイル */
+            .dash-dropdown .Select-control {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                border: 1px solid {DARK_COLORS['border_color']} !important;
+            }}
+
+            .dash-dropdown .Select-input input {{
+                color: {DARK_COLORS['text_secondary']} !important;
+            }}
+
+            .dash-dropdown .Select-value-label {{
+                color: {DARK_COLORS['text_secondary']} !important;
+            }}
+
+            .dash-dropdown .Select-placeholder {{
+                color: {DARK_COLORS['text_muted']} !important;
+            }}
+
+            /* より具体的なDash Dropdownスタイル */
+            div[class*="dash-dropdown"] .Select-menu-outer {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                border: 1px solid {DARK_COLORS['border_light']} !important;
+                z-index: 9999 !important;
+            }}
+
+            div[class*="dash-dropdown"] .Select-option {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                color: {DARK_COLORS['text_secondary']} !important;
+                border-bottom: 1px solid {DARK_COLORS['border_color']} !important;
+            }}
+
+            div[class*="dash-dropdown"] .Select-option:hover {{
+                background-color: {DARK_COLORS['bg_hover']} !important;
+                color: {DARK_COLORS['text_primary']} !important;
+            }}
+
+            div[class*="dash-dropdown"] .Select-option:last-child {{
+                border-bottom: none !important;
+            }}
+
+            /* dcc.Dropdown の直接的なスタイリング */
+            .dash-core-components .dropdown .Select-menu-outer {{
+                background: {DARK_COLORS['bg_card']} !important;
+                border: 1px solid {DARK_COLORS['border_light']} !important;
+            }}
+
+            .dash-core-components .dropdown .Select-option {{
+                background: {DARK_COLORS['bg_card']} !important;
+                color: {DARK_COLORS['text_secondary']} !important;
+                font-size: 0.8rem !important;
+            }}
+
+            .dash-core-components .dropdown .Select-option:hover {{
+                background: {DARK_COLORS['bg_hover']} !important;
+                color: {DARK_COLORS['text_primary']} !important;
+            }}
+
+            /* 全ドロップダウン要素への強制適用 */
+            [class*="Select-menu"] {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                border: 1px solid {DARK_COLORS['border_light']} !important;
+            }}
+
+            [class*="Select-option"] {{
+                background-color: {DARK_COLORS['bg_card']} !important;
+                color: {DARK_COLORS['text_secondary']} !important;
+            }}
+
+            [class*="Select-option"]:hover {{
+                background-color: {DARK_COLORS['bg_hover']} !important;
+                color: {DARK_COLORS['text_primary']} !important;
             }}
 
             /* グリッドレイアウト - セクション分離 */
@@ -197,20 +322,25 @@ app.index_string = f'''
                 transition: all {LAYOUT['transition']};
             }}
 
-            .card-container:hover {{
-                border-color: {DARK_COLORS['primary_orange']};
-                transform: translateY(-2px);
+            .card-container {{
+                will-change: transform, border-color;
+                transition: transform 0.15s ease, border-color 0.15s ease;
             }}
 
-            /* カード共通スタイル */
+            .card-container:hover {{
+                border-color: {DARK_COLORS['primary_orange']};
+                transform: translateY(-1px);
+            }}
+
+            /* カード共通スタイル - GPU最適化 */
             .metric-card {{
-                transition: all {LAYOUT['transition']};
+                will-change: transform;
+                transition: transform 0.15s ease;
             }}
 
             .metric-card:hover {{
-                transform: translateY(-2px);
+                transform: translateY(-1px);
                 border-color: {DARK_COLORS['border_light']} !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             }}
 
             .performance-card {{
@@ -229,8 +359,13 @@ app.index_string = f'''
                 opacity: 0;
             }}
 
+            .performance-card {{
+                will-change: transform;
+                transition: transform 0.15s ease;
+            }}
+
             .performance-card:hover {{
-                transform: translateX(4px);
+                transform: translateX(2px);
                 border-color: {DARK_COLORS['border_light']} !important;
             }}
 
@@ -250,10 +385,14 @@ app.index_string = f'''
                 background: {DARK_COLORS['danger']};
             }}
 
-            /* ファネルステージ */
+            /* ファネルステージ - GPU最適化 */
+            .funnel-stage {{
+                will-change: transform;
+                transition: transform 0.15s ease;
+            }}
+
             .funnel-stage:hover {{
-                transform: scale(1.02);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                transform: scale(1.01);
             }}
 
             /* チャネルヘッダー */
@@ -272,14 +411,15 @@ app.index_string = f'''
                 border-color: {DARK_COLORS['danger']} !important;
             }}
 
-            /* インサイトアイテム */
+            /* インサイトアイテム - 軽量化 */
             .insight-item {{
-                transition: all {LAYOUT['transition']};
+                will-change: transform;
+                transition: transform 0.15s ease, background-color 0.15s ease;
             }}
 
             .insight-item:hover {{
                 background: rgba(255,255,255,0.05) !important;
-                transform: translateX(2px);
+                transform: translateX(1px);
             }}
 
             /* スクロールバー */
@@ -340,6 +480,32 @@ app.index_string = f'''
 
             .dash-spinner::after {{
                 border-color: {DARK_COLORS['primary_orange']} transparent {DARK_COLORS['primary_orange']} transparent !important;
+            }}
+            
+            /* 静的ローディング表示 */
+            .loading-pulse {{
+                opacity: 0.6;
+                transition: opacity 0.3s ease;
+            }}
+            
+            .loading-skeleton {{
+                background: linear-gradient(90deg, 
+                    {DARK_COLORS['border_color']} 25%, 
+                    rgba(255,255,255,0.1) 50%, 
+                    {DARK_COLORS['border_color']} 75%);
+                background-size: 200% 100%;
+                border-radius: 4px;
+            }}
+            
+            .chart-loading-container {{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 200px;
+                background-color: {DARK_COLORS['bg_card']};
+                border: 1px dashed {DARK_COLORS['border_color']};
+                border-radius: 8px;
+                opacity: 0.8;
             }}
         </style>
     </head>
@@ -447,7 +613,7 @@ def render_tab_content(tab1_clicks, tab2_clicks, active_tab):
     
     return content, tab1_style, tab2_style, active_tab, tab1_filter_style, tab2_channel_filter_style, tab2_plan_filter_style, acquisition_revenue_toggle_style
 
-# データアップロード処理
+# データアップロード処理（ローディング表示対応）
 @app.callback(
     [Output('month-selector', 'options'),
      Output('month-selector', 'value'),
@@ -456,12 +622,16 @@ def render_tab_content(tab1_clicks, tab2_clicks, active_tab):
      Output('channel-filter-tab1', 'options'),
      Output('channel-filter-tab2', 'options'),
      Output('plan-filter-tab2', 'options'),
-     Output('last-update', 'children')],
+     Output('last-update-container', 'children')],
     [Input('upload-data', 'contents'),
      Input('app-initialization', 'children')],  # 初期化トリガーを追加
     [State('upload-data', 'filename')]
 )
 def handle_file_upload(contents, initialization_trigger, filename):
+    # ローディング表示を返す関数
+    def get_loading_state():
+        return ([], None, [], [], [], [], [], create_inline_loading_text("データを処理中..."))
+    
     # アップロードファイルがある場合の処理
     if contents is not None:
         success, message = data_manager.update_data(contents, filename)
@@ -511,6 +681,15 @@ def handle_file_upload(contents, initialization_trigger, filename):
         if default_month is None and month_options:
             default_month = month_options[-1]['value']
         
+        # 成功時の更新表示
+        last_update_display = html.Span(
+            f"最終更新: {data_manager.get_last_update()}",
+            style={
+                'color': DARK_COLORS['text_muted'],
+                'fontSize': '0.75rem'
+            }
+        )
+        
         return (
             month_options, 
             default_month, 
@@ -519,10 +698,18 @@ def handle_file_upload(contents, initialization_trigger, filename):
             channel_options,  # Tab1の経路フィルタにも同じチャネルオプションを設定
             channel_options,  # Tab2の経路フィルタにも同じチャネルオプションを設定
             plan_options,     # Tab2のプランフィルタにも同じプランオプションを設定
-            f"最終更新: {data_manager.get_last_update()}"
+            last_update_display
         )
     else:
-        return [], None, [], [], [], [], [], f"最終更新: エラー - {message}"
+        # エラー時の表示
+        error_display = html.Span(
+            f"最終更新: エラー - {message}",
+            style={
+                'color': DARK_COLORS['danger'],
+                'fontSize': '0.75rem'
+            }
+        )
+        return [], None, [], [], [], [], [], error_display
 
 # ボタン状態管理: 計画比/計画差
 @app.callback(

@@ -99,6 +99,25 @@ PLOTLY_TEMPLATE = {
     }
 }
 
+# Plotly軽量化設定
+PLOTLY_CONFIG = {
+    'displayModeBar': False,      # ツールバー非表示
+    'staticPlot': False,          # インタラクティブ維持
+    'scrollZoom': False,          # ズーム無効
+    'doubleClick': False,         # ダブルクリック無効  
+    'showTips': False,            # チップ無効
+    'responsive': True,           # レスポンシブ維持
+    'toImageButtonOptions': {
+        'format': 'svg',          # 軽量フォーマット
+        'width': None,
+        'height': None
+    },
+    'modeBarButtonsToRemove': [   # 不要なボタン削除
+        'pan2d', 'lasso2d', 'select2d', 'autoScale2d', 
+        'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian'
+    ]
+}
+
 # データマッピング
 STAGE_MAPPING = {
     "新規リード数": [102, 121],
@@ -135,33 +154,26 @@ EXCEL_STRUCTURE = {
     }
 }
 
-# CSS animations
+# データポイント最適化関数
+def optimize_chart_data(df, max_points=50):
+    """データポイント数を制限（視覚的品質維持）"""
+    if df is None or df.empty:
+        return df
+    if len(df) > max_points:
+        step = max(1, len(df) // max_points)
+        return df.iloc[::step]
+    return df
+
+# CSS animations - 軽量版
 ANIMATIONS = """
+/* 軽量アニメーション - GPU最適化 */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-10px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slideIn {
-    animation: slideIn 0.3s ease-out;
-}
-
-.animate-pulse {
-    animation: pulse 2s infinite;
+    animation: fadeIn 0.2s ease-out;
+    will-change: opacity;
 }
 """

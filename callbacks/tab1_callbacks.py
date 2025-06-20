@@ -14,7 +14,8 @@ from components.cards import (
     create_metric_card, create_channel_funnel, create_insight_card,
     create_trend_item
 )
-from config import INTEGRATED_STAGES, DARK_COLORS, LAYOUT
+from components.loading import create_chart_loading_placeholder, create_skeleton_card
+from config import INTEGRATED_STAGES, DARK_COLORS, LAYOUT, PLOTLY_CONFIG
 
 def register_tab1_callbacks(app):
     """Tab1のコールバックを登録"""
@@ -217,7 +218,7 @@ def register_tab1_callbacks(app):
                             dcc.Graph(
                                 figure=fig,
                                 style={'height': '100%', 'minHeight': 0, 'maxHeight': '100%'},
-                                config={'displayModeBar': False, 'responsive': True}
+                                config=PLOTLY_CONFIG
                             )
                         ], 
                         className='plan-card',
@@ -383,7 +384,7 @@ def register_tab1_callbacks(app):
                                         'maxHeight': '300px',
                                         'minHeight': '300px'
                                     },
-                                    config={'displayModeBar': False}
+                                    config=PLOTLY_CONFIG
                                 )
                             ], style={
                                 'height': '100%',
