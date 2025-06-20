@@ -52,12 +52,11 @@ def register_tab1_callbacks(app):
         Output('funnel-metrics-bar', 'children'),
         [Input('month-selector', 'value'),
          Input('btn-plan-ratio', 'className'),
-         Input('btn-cumulative', 'className'),
          Input('channel-filter', 'value'),
          Input('plan-filter', 'value'),
          Input('channel-filter-tab1', 'value')]
     )
-    def update_funnel_metrics(selected_month, plan_ratio_class, cumulative_class, 
+    def update_funnel_metrics(selected_month, plan_ratio_class, 
                             channel_filter, plan_filter, channel_filter_tab1):
         data = data_manager.get_data()
         if not data or not selected_month:
@@ -65,11 +64,11 @@ def register_tab1_callbacks(app):
         
         try:
             from components.charts import create_trend_chart
-            from data_manager import should_display_actual_data, calculate_single_month, calculate_cumulative
+            from data_manager import should_display_actual_data
             
-            # データタイプと期間タイプの判定
+            # データタイプの判定（Tab1は常に元データをそのまま表示）
             data_type = 'plan_ratio' if 'active' in plan_ratio_class else 'plan_diff'
-            period_type = 'cumulative' if 'active' in cumulative_class else 'single'
+            # Tab1では累月・単月の概念がないため、常に元データを使用
             
             # ステージ定義
             stages = [
@@ -118,11 +117,7 @@ def register_tab1_callbacks(app):
                             else:
                                 budget_totals.append(0)
                         
-                        # 期間変換
-                        if period_type == 'cumulative':
-                            if len(actual_totals) > 0:
-                                actual_totals = calculate_cumulative(actual_totals)
-                            budget_totals = calculate_cumulative(budget_totals)
+                        # Tab1では期間変換は行わず、元データをそのまま使用
                         
                         # 達成率計算
                         achievement_rates = []
