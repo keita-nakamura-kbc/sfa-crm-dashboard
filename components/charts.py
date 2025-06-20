@@ -700,12 +700,12 @@ def create_dual_sparkline(actual_values, budget_values, achievement_rate, height
                 name='実績',
                 line=dict(
                     color=status_color,
-                    width=2
+                    width=3  # 2→3に太くする
                 ),
                 marker=dict(
-                    size=4,
+                    size=5,  # 4→5に拡大
                     color=status_color,
-                    opacity=0.8
+                    opacity=0.9  # 0.8→0.9に上げる
                 ),
                 opacity=0.9,
                 hovertemplate='<span style="color: white;"><b>実績</b><br>%{x}: %{y:,.0f}' + ('%' if value_type == 'percentage' else '') + '</span><extra></extra>' if enable_hover else None,

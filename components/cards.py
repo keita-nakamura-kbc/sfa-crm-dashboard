@@ -145,7 +145,7 @@ def create_performance_card(category, value, achievement_rate, budget_value, tre
             trend_data['budget_values'],
             achievement_rate,
             height=42,  # スパークライン最適化
-            width=75,   # 横幅も若干拡大
+            width=100,   # 横幅を75→100に拡大
             enable_hover=True,
             value_type='number',  # デフォルトは数値
             actual_months=trend_data.get('actual_months')  # 実際のデータがある月数
@@ -259,7 +259,7 @@ def create_performance_card(category, value, achievement_rate, budget_value, tre
                     'justifyContent': 'center'
                 })
             ], style={
-                'width': '75px',
+                'width': '110px',  # 75px → 110pxに拡大
                 'height': '100%',
                 'display': 'flex',
                 'alignItems': 'center'
@@ -662,7 +662,7 @@ def create_trend_item(channel, volume, cv_rate, volume_trend_data=None, cv_trend
             cv_trend_data.get('cv_budget_values', []),
             achievement_rate,  # 正しい達成率を使用
             height=42,
-            width=120,
+            width=110,  # 120→110に調整（パフォーマンスカードと同じ幅）
             enable_hover=True,
             value_type='percentage',
             actual_months=valid_months  # 実際にデータがある月数を渡す
@@ -753,7 +753,7 @@ def create_trend_item(channel, volume, cv_rate, volume_trend_data=None, cv_trend
                     'justifyContent': 'center'
                 })
             ], style={
-                'width': '120px',
+                'width': '110px',  # 120px→110pxに統一
                 'height': '100%',
                 'display': 'flex',
                 'alignItems': 'center'
