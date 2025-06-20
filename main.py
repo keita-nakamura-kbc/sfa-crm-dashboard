@@ -450,6 +450,19 @@ app.index_string = f'''
                 font-family: 'Inter', sans-serif !important;
             }}
 
+            /* ロゴスタイル */
+            .header-logo {{
+                height: 28px;
+                width: auto;
+                object-fit: contain;
+                margin-right: 8px;
+                transition: opacity 0.2s ease;
+            }}
+
+            .header-logo:hover {{
+                opacity: 0.8;
+            }}
+
             /* レスポンシブ対応 */
             @media (max-width: 1366px) {{
                 .metric-card {{
@@ -458,6 +471,17 @@ app.index_string = f'''
                 
                 .main-container {{
                     padding: 12px;
+                }}
+                
+                .header-logo {{
+                    height: 24px;  /* 小画面では少し小さく */
+                }}
+            }}
+
+            @media (max-width: 768px) {{
+                .header-logo {{
+                    height: 20px;  /* モバイルサイズ */
+                    margin-right: 6px;
                 }}
             }}
 

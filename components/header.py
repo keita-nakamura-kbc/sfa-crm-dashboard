@@ -15,7 +15,12 @@ def create_header():
             html.Div([
                 # ロゴまたはタイトル
                 html.Div([
-                    html.H4("SFA/CRM Analytics", 
+                    html.Img(
+                        src='/assets/w_logo.webp',
+                        alt='SFA/CRM Analytics Logo',
+                        className='header-logo'
+                    ),
+                    html.H4("Analytics", 
                         **{
                             'role': 'heading',
                             'aria-level': '1'
