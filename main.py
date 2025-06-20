@@ -376,6 +376,9 @@ app.layout = html.Div([
     dcc.Store(id='active-tab', data='tab-1'),
     dcc.Store(id='stage-cv-filter', data=None),
     dcc.Store(id='analysis-type-state', data='acquisition'),  # 獲得/売上の状態管理
+    
+    # 初期化トリガー用のhidden div
+    html.Div(id='app-initialization', children='initialized', style={'display': 'none'})
 ], style={
     'minHeight': '100vh',
     'backgroundColor': DARK_COLORS['bg_dark']
@@ -454,14 +457,19 @@ def render_tab_content(tab1_clicks, tab2_clicks, active_tab):
      Output('channel-filter-tab2', 'options'),
      Output('plan-filter-tab2', 'options'),
      Output('last-update', 'children')],
-    [Input('upload-data', 'contents')],
+    [Input('upload-data', 'contents'),
+     Input('app-initialization', 'children')],  # 初期化トリガーを追加
     [State('upload-data', 'filename')]
 )
-def handle_file_upload(contents, filename):
-    if contents is None:
-        return [], None, [], [], [], [], [], "最終更新: 未更新"
-    
-    success, message = data_manager.update_data(contents, filename)
+def handle_file_upload(contents, initialization_trigger, filename):
+    # アップロードファイルがある場合の処理
+    if contents is not None:
+        success, message = data_manager.update_data(contents, filename)
+    else:
+        # 初期化時：既存のデータがあるかチェック
+        existing_data = data_manager.get_data()
+        success = existing_data is not None
+        message = "サンプルデータ読み込み済み" if success else "データなし"
     
     if success:
         data = data_manager.get_data()
@@ -588,6 +596,40 @@ def update_analysis_type_buttons(acquisition_clicks, revenue_clicks, current_sta
 # タブ別コールバックの登録
 register_tab1_callbacks(app)
 register_tab2_callbacks(app)
+
+# 起動時のサンプルデータ自動読み込み
+def load_sample_data_on_startup():
+    """起動時にサンプルデータを自動読み込み"""
+    import os
+    sample_file = 'pdca_2025.xlsx'
+    
+    if os.path.exists(sample_file):
+        try:
+            # サンプルファイルを読み込み
+            with open(sample_file, 'rb') as f:
+                file_content = f.read()
+            
+            # Base64エンコード（Dashのfile upload形式に合わせる）
+            import base64
+            encoded_content = base64.b64encode(file_content).decode('utf-8')
+            file_data = f"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{encoded_content}"
+            
+            # データマネージャーにデータを読み込み
+            success, message = data_manager.update_data(file_data, sample_file)
+            if success:
+                logger.info(f"✅ サンプルデータを自動読み込みしました: {sample_file}")
+                return True
+            else:
+                logger.warning(f"⚠️ サンプルデータの読み込みに失敗: {message}")
+        except Exception as e:
+            logger.error(f"❌ サンプルデータ読み込みエラー: {str(e)}")
+    else:
+        logger.info(f"ℹ️ サンプルファイルが見つかりません: {sample_file}")
+    
+    return False
+
+# 起動時にサンプルデータを自動読み込み（コールバック登録後に実行）
+load_sample_data_on_startup()
 
 # アプリケーション実行
 if __name__ == '__main__':

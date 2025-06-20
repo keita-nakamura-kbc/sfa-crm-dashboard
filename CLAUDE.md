@@ -142,8 +142,9 @@ pyinstaller --onefile --add-data "assets:assets" --add-data "components:componen
 
 ### Application Startup
 - The app runs on port 8050 by default with debug=True in development
-- Sample data file 'pdca_2025.xlsx' is included for testing
+- Sample data file 'pdca_2025.xlsx' is automatically loaded on startup
 - The app expects Excel files with a '25年PDCA' sheet name
+- `load_sample_data_on_startup()` function handles automatic data loading in both development and production
 
 ### Data Store Components
 - 'data-store': Main processed data storage
