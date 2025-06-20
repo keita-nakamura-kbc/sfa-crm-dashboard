@@ -1,0 +1,142 @@
+/* Tab1専用CSS - Tab2と統一されたシンプル設定 */
+
+/* Tab1とTab2で統一されたセクション設定 */
+.funnel-tab-wrapper .section-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 重なり問題の修正 - grid container最適化 */
+.funnel-middle-bottom-section {
+  min-height: 0;
+  max-height: 70% !important;  /* 70%を超えないよう強制 */
+  overflow: hidden;
+}
+
+/* grid-area要素の最適化 */
+.funnel-middle-bottom-section > div[style*="gridArea"] {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* flexbox container最適化 */
+.funnel-middle-bottom-section .card-base {
+  min-height: 0;
+  max-height: 100%;
+}
+
+/* スクロール可能エリアの改善 */
+.funnel-middle-bottom-section .overflow-auto {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 1600px) {
+  .funnel-middle-bottom-section {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .funnel-middle-bottom-section {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: 
+      "funnel"
+      "trends"
+      "stage-trends";
+  }
+}
+
+/* Tab1の複合グラフグリッド最適化 */
+.funnel-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: 1fr; /* 行の高さを明示的に指定 */
+  gap: var(--gap-s);
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  align-items: stretch; /* アイテムを行の高さに合わせて伸縮 */
+}
+
+/* シンプルな高さ制約 - Tab2と同じアプローチ */
+.funnel-top-section {
+  overflow: hidden;
+}
+
+#funnel-metrics-bar.funnel-metrics-grid {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+
+/* ファネルチャートの基本設定 */
+#funnel-grid .plotly-graph-div {
+  height: 300px !important;
+  width: 100% !important;
+}
+
+/* ファネルエリアの高さ制限 */
+#funnel-grid {
+  max-height: 500px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* 複合グラフカードの内部レイアウト最適化 - Tab2と同じアプローチ */
+.funnel-metrics-grid .plan-card {
+  display: flex;
+  flex-direction: column;
+  height: 100% !important;
+  max-height: 100% !important;
+  padding: 8px;
+  overflow: hidden !important;
+  box-sizing: border-box;
+  position: relative;
+  flex-shrink: 1 !important; /* カードの縮小を許可 */
+  min-height: 0 !important; /* 最小高さ制約を削除 */
+  /* 絶対的制約 - 親コンテナから溢れを防ぐ */
+  /* contain: layout style size !important; ホバー問題のため一時無効化 */
+  /* isolation: isolate !important; ホバー問題のため一時無効化 */
+}
+
+.funnel-metrics-grid .plan-card h3 {
+  margin: 0;
+  padding: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.funnel-metrics-grid .dcc-graph {
+  flex: 1 1 auto;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  width: 100%;
+  overflow: hidden !important;
+  position: relative;
+}
+
+.funnel-metrics-grid .dcc-graph > div {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.funnel-metrics-grid .js-plotly-plot {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.funnel-metrics-grid .plotly-graph-div {
+  height: 100% !important;
+  width: 100% !important;
+}
