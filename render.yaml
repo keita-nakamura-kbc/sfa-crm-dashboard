@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: sfa-crm-dashboard
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:server --workers 3 --preload"
+    branch: main
+    autoDeploy: true

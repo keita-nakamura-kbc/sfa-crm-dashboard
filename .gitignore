@@ -33,6 +33,10 @@ patch.*
 *_old.*
 *_backup.*
 
+# Deployment
+.env
+.env.local
+
 # Data files (optional - uncomment if you don't want to track sample data)
 # *.xlsx
 # *.csv
