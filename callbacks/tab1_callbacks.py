@@ -64,7 +64,7 @@ def register_tab1_callbacks(app):
         
         try:
             from components.charts import create_trend_chart
-            from data_manager import should_display_actual_data
+            from data_manager import should_display_actual_data, get_last_data_month
             
             # データタイプの判定（Tab1は常に元データをそのまま表示）
             data_type = 'plan_ratio' if 'active' in plan_ratio_class else 'plan_diff'
@@ -78,6 +78,16 @@ def register_tab1_callbacks(app):
                 {'title': '内諾', 'plans': ['内諾ステージ']},
                 {'title': '獲得', 'plans': ['新規アプリ獲得数（単月）']}
             ]
+            
+            # 全体の最終データ月を取得（全ステージで統一するため）
+            global_last_month = None
+            if 'indicators' in data:
+                actual_df_global = get_dataframe_from_store(data, 'indicators', 'actual')
+                if actual_df_global is not None:
+                    current_channel_filter = [channel_filter_tab1] if channel_filter_tab1 else []
+                    filtered_all_actual = apply_filters(actual_df_global, current_channel_filter, plan_filter)
+                    month_cols_global = [col for col in filtered_all_actual.columns if col.endswith('月')]
+                    global_last_month = get_last_data_month(filtered_all_actual, month_cols_global)
             
             graphs = []
             
@@ -110,25 +120,45 @@ def register_tab1_callbacks(app):
                                 budget_total = filtered_budget[month].sum()
                                 budget_totals.append(budget_total)
                                 
-                                if should_display_actual_data(filtered_actual, month_cols, month):
-                                    actual_months.append(month)
-                                    actual_total = filtered_actual[month].sum()
-                                    actual_totals.append(actual_total)
+                                # グローバルな最終データ月を使用して表示判定
+                                if global_last_month and month in month_cols_global:
+                                    try:
+                                        global_last_idx = month_cols_global.index(global_last_month)
+                                        target_idx = month_cols_global.index(month)
+                                        if target_idx <= global_last_idx:
+                                            actual_months.append(month)
+                                            actual_total = filtered_actual[month].sum()
+                                            actual_totals.append(actual_total)
+                                    except (ValueError, IndexError):
+                                        pass
                             else:
                                 budget_totals.append(0)
                         
                         # Tab1では期間変換は行わず、元データをそのまま使用
                         
-                        # 達成率計算
+                        # 達成率計算（実績がある月全てに対して計算）
                         achievement_rates = []
-                        if data_type == 'plan_ratio' and actual_months:
+                        if data_type == 'plan_ratio':
+                            # actual_monthsに含まれる月のインデックスを作成
+                            actual_month_indices = {}
                             for i, month in enumerate(actual_months):
                                 if month in all_months:
-                                    month_idx = all_months.index(month)
-                                    actual_val = actual_totals[i]
+                                    actual_month_indices[all_months.index(month)] = i
+                            
+                            # 全ての月に対して達成率を計算
+                            for month_idx, month in enumerate(all_months):
+                                if month_idx in actual_month_indices:
+                                    # 実績データがある月
+                                    actual_idx = actual_month_indices[month_idx]
+                                    actual_val = actual_totals[actual_idx]
                                     budget_val = budget_totals[month_idx]
                                     if budget_val > 0:
                                         achievement_rates.append((actual_val / budget_val) * 100)
+                                    else:
+                                        achievement_rates.append(0)
+                                else:
+                                    # 実績データがない月はNoneを追加（線を表示しない）
+                                    achievement_rates.append(None)
                         
                         # タブ2と同じスタイルのトレンドチャート作成
                         fig = create_trend_chart(

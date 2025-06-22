@@ -159,25 +159,35 @@ def create_trend_chart(months, budget_values, actual_values, actual_months,
         
         # 達成率ライン（計画比の場合）
         if achievement_rates and data_type == 'plan_ratio':
-            heatmap_colors = [get_heatmap_color(rate) for rate in achievement_rates]
+            # None以外の値のみをフィルタリングして表示
+            filtered_months = []
+            filtered_rates = []
+            heatmap_colors = []
             
-            fig.add_trace(
-                go.Scatter(
-                    x=actual_months,
-                    y=achievement_rates,
-                    mode='lines+markers',
-                    name='計画比',
-                    line=dict(color=DARK_COLORS['chart_line'], width=3),
-                    marker=dict(
-                        size=8,
-                        color=heatmap_colors,
-                        line=dict(width=1, color='white')
+            for i, rate in enumerate(achievement_rates):
+                if rate is not None:
+                    filtered_months.append(months[i])
+                    filtered_rates.append(rate)
+                    heatmap_colors.append(get_heatmap_color(rate))
+            
+            if filtered_rates:  # データがある場合のみ描画
+                fig.add_trace(
+                    go.Scatter(
+                        x=filtered_months,
+                        y=filtered_rates,
+                        mode='lines+markers',
+                        name='計画比',
+                        line=dict(color=DARK_COLORS['chart_line'], width=3),
+                        marker=dict(
+                            size=8,
+                            color=heatmap_colors,
+                            line=dict(width=1, color='white')
+                        ),
+                        hovertemplate='計画比: %{y:.1f}%<extra></extra>',
+                        showlegend=False
                     ),
-                    hovertemplate='計画比: %{y:.1f}%<extra></extra>',
-                    showlegend=False
-                ),
-                secondary_y=True
-            )
+                    secondary_y=True
+                )
             
             fig.update_yaxes(
                 title_text="",

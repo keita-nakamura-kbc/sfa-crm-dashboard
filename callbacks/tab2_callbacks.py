@@ -45,7 +45,7 @@ def register_tab2_callbacks(app):
                 ], className='flex-row items-center'),
                 html.Div([
                     html.I(className="fas fa-tasks", style={'marginRight': '4px'}),
-                    html.H3("獲得構成（アプリ別）", 
+                    html.H3("獲得構成（プラン別）", 
                         **{
                             'role': 'heading',
                             'aria-level': '3'
