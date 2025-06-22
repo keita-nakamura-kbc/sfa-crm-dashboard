@@ -14,7 +14,8 @@
       "Bash(pkill:*)",
       "Bash(true)",
       "Bash(cp:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

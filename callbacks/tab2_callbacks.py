@@ -158,52 +158,34 @@ def register_tab2_callbacks(app):
                 # Tab2専用のフィルターを使用
                 current_channel_filter = [channel_filter_tab2] if channel_filter_tab2 else channel_filter
                 current_plan_filter = [plan_filter_tab2] if plan_filter_tab2 else plan_filter
-                filtered_actual = apply_filters(actual_df, current_channel_filter, current_plan_filter)
-                filtered_budget = apply_filters(budget_df, current_channel_filter, current_plan_filter)
                 
-                if not filtered_actual.empty and not filtered_budget.empty:
-                    # 月次データ取得
+                # フィルタリングはcalculate_kpi_values内で行われるため、ここでは不要
+                if actual_df is not None and budget_df is not None:
+                    # 月次データ取得（calculate_kpi_values()と同じロジックを使用）
                     all_months = [f"{i}月" for i in range(1, 13)]
                     budget_totals = []
                     actual_totals = []
                     actual_months = []
                     
-                    # データタイプに応じた処理
+                    # 各月のデータをcalculate_kpi_values()を使用して取得
+                    # 注意: calculate_kpi_values()は既に期間タイプ（単月/累月）を考慮した値を返す
                     for month in all_months:
                         if month in month_cols:
-                            if analysis_type == 'revenue':
-                                # 売上の場合：そのまま合計
-                                budget_val = format_number(filtered_budget[month].sum())
-                                if should_display_actual_data(filtered_actual, month_cols, month):
-                                    actual_months.append(month)
-                                    actual_val = format_number(filtered_actual[month].sum())
-                                    actual_totals.append(actual_val)
-                            else:
-                                # 獲得の場合：累月データから単月に変換
-                                month_idx = month_cols.index(month)
-                                current_budget = filtered_budget[month].sum()
-                                if month_idx > 0:
-                                    prev_month = month_cols[month_idx - 1]
-                                    prev_budget = filtered_budget[prev_month].sum() if prev_month in filtered_budget.columns else 0
-                                    budget_val = format_number(max(0, current_budget - prev_budget))
-                                else:
-                                    budget_val = format_number(current_budget)
-                                
-                                if should_display_actual_data(filtered_actual, month_cols, month):
-                                    actual_months.append(month)
-                                    current_actual = filtered_actual[month].sum()
-                                    if month_idx > 0:
-                                        prev_month = month_cols[month_idx - 1]
-                                        prev_actual = filtered_actual[prev_month].sum() if prev_month in filtered_actual.columns else 0
-                                        actual_val = format_number(max(0, current_actual - prev_actual))
-                                    else:
-                                        actual_val = format_number(current_actual)
-                                    actual_totals.append(actual_val)
-                            budget_totals.append(budget_val)
+                            # calculate_kpi_values()と同じ計算方法を使用（単月値を取得）
+                            actual_val, budget_val = calculate_kpi_values(
+                                data, data_key, month, data_type, 'single',  # 常に単月値を取得
+                                current_channel_filter, current_plan_filter
+                            )
+                            
+                            budget_totals.append(format_number(budget_val))
+                            
+                            if should_display_actual_data(actual_df, month_cols, month):
+                                actual_months.append(month)
+                                actual_totals.append(format_number(actual_val))
                         else:
                             budget_totals.append(0)
                     
-                    # 期間変換
+                    # 期間変換（単月値から累月値への変換が必要な場合のみ）
                     if period_type == 'cumulative':
                         if len(actual_totals) > 0:
                             actual_totals = calculate_cumulative(actual_totals)

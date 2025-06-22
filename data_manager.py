@@ -333,7 +333,7 @@ def calculate_kpi_values(data, section, selected_month, data_type, period_type, 
                     if month_idx > 0:
                         prev_month = month_cols[month_idx - 1]
                         prev_val = filtered_df[prev_month].sum() if prev_month in filtered_df.columns else 0
-                        actual_value = max(0, current_val - prev_val)
+                        actual_value = current_val - prev_val  # Allow negative values
                     else:
                         actual_value = current_val
                 # 売上高の累月計算: 単月データから累計を計算
@@ -363,7 +363,7 @@ def calculate_kpi_values(data, section, selected_month, data_type, period_type, 
                 if month_idx > 0:
                     prev_month = month_cols[month_idx - 1]
                     prev_val = filtered_budget_df[prev_month].sum() if prev_month in filtered_budget_df.columns else 0
-                    budget_value = max(0, current_val - prev_val)
+                    budget_value = current_val - prev_val  # Allow negative values
                 else:
                     budget_value = current_val
             # 売上高の累月計算: 単月データから累計を計算
@@ -461,7 +461,7 @@ def get_monthly_trend_data(data, section, data_type, period_type, channel_filter
                         if i > 0:
                             prev_month = month_cols[i - 1]
                             prev_val = filtered_df[prev_month].sum() if prev_month in filtered_df.columns else 0
-                            single_val = max(0, current_val - prev_val)
+                            single_val = current_val - prev_val  # Allow negative values
                             actual_values.append(single_val)
                         else:
                             actual_values.append(current_val)
@@ -526,7 +526,7 @@ def get_monthly_trend_data(data, section, data_type, period_type, channel_filter
                     if i > 0:
                         prev_month = month_cols[i - 1]
                         prev_val = filtered_budget_df[prev_month].sum() if prev_month in filtered_budget_df.columns else 0
-                        budget_values.append(max(0, current_val - prev_val))
+                        budget_values.append(current_val - prev_val)  # Allow negative values
                     else:
                         budget_values.append(current_val)
                 else:
