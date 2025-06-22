@@ -477,14 +477,16 @@ def register_tab1_callbacks(app):
                         ch_filter = [channel]
                         
                         
+                        # 全体データを一度フィルタリング（効率化のため）
+                        filtered_indicators_actual = apply_filters(indicators_actual, ch_filter, [])
+                        
                         # 獲得数データを取得（ボリューム表示用）
                         volume_data_list = []
                         
                         for plan in volume_plans:
-                            plan_data = indicators_actual[indicators_actual['plan'] == plan]
-                            filtered_data = apply_filters(plan_data, ch_filter, [])
-                            if not filtered_data.empty:
-                                volume_data_list.append(filtered_data)
+                            plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                            if not plan_data.empty:
+                                volume_data_list.append(plan_data)
                         
                         # CV率計算用のステージデータを取得
                         cv_from_plans, cv_to_plans = cv_stage_mapping.get(cv_filter, (['内諾ステージ'], ['新規アプリ獲得数（単月）']))
@@ -499,16 +501,14 @@ def register_tab1_callbacks(app):
                         cv_to_data_list = []
                         
                         for plan in cv_from_plans:
-                            plan_data = indicators_actual[indicators_actual['plan'] == plan]
-                            filtered_data = apply_filters(plan_data, ch_filter, [])
-                            if not filtered_data.empty:
-                                cv_from_data_list.append(filtered_data)
+                            plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                            if not plan_data.empty:
+                                cv_from_data_list.append(plan_data)
                         
                         for plan in cv_to_plans:
-                            plan_data = indicators_actual[indicators_actual['plan'] == plan]
-                            filtered_data = apply_filters(plan_data, ch_filter, [])
-                            if not filtered_data.empty:
-                                cv_to_data_list.append(filtered_data)
+                            plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                            if not plan_data.empty:
+                                cv_to_data_list.append(plan_data)
                         
                         if selected_month in indicators_actual.columns:
                             # 選択されたボリュームの合計を計算
@@ -539,25 +539,26 @@ def register_tab1_callbacks(app):
                             # 計画データを事前に取得
                             budget_df = get_dataframe_from_store(data, 'indicators', 'budget')
                             
+                            # 予算データも一度フィルタリング
+                            filtered_budget_df = apply_filters(budget_df, ch_filter, []) if budget_df is not None else None
+                            
                             # 各月のデータを取得
                             for month in month_cols:
                                 # 実績データ - 選択されたボリュームフィルタに基づく
                                 month_volume = 0
                                 for plan in volume_plans:
-                                    plan_data = indicators_actual[indicators_actual['plan'] == plan]
-                                    filtered_data = apply_filters(plan_data, ch_filter, [])
-                                    if not filtered_data.empty and month in filtered_data.columns:
-                                        month_volume += filtered_data[month].sum()
+                                    plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                    if not plan_data.empty and month in plan_data.columns:
+                                        month_volume += plan_data[month].sum()
                                 volume_trend['actual_values'].append(month_volume)
                                 
                                 # 計画データを取得
-                                if budget_df is not None:
+                                if filtered_budget_df is not None:
                                     budget_volume = 0
                                     for plan in volume_plans:
-                                        budget_plan_data = budget_df[budget_df['plan'] == plan]
-                                        filtered_budget = apply_filters(budget_plan_data, ch_filter, [])
-                                        if not filtered_budget.empty and month in filtered_budget.columns:
-                                            budget_volume += filtered_budget[month].sum()
+                                        budget_plan_data = filtered_budget_df[filtered_budget_df['plan'] == plan]
+                                        if not budget_plan_data.empty and month in budget_plan_data.columns:
+                                            budget_volume += budget_plan_data[month].sum()
                                     volume_trend['budget_values'].append(budget_volume)
                                 else:
                                     volume_trend['budget_values'].append(0)
@@ -577,38 +578,34 @@ def register_tab1_callbacks(app):
                                 month_cv_to_total = 0
                                 
                                 for plan in cv_from_plans:
-                                    plan_data = indicators_actual[indicators_actual['plan'] == plan]
-                                    filtered_data = apply_filters(plan_data, ch_filter, [])
-                                    if not filtered_data.empty and month in filtered_data.columns:
-                                        plan_value = filtered_data[month].sum()
+                                    plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                    if not plan_data.empty and month in plan_data.columns:
+                                        plan_value = plan_data[month].sum()
                                         month_cv_from_total += plan_value
                                     
                                 for plan in cv_to_plans:
-                                    plan_data = indicators_actual[indicators_actual['plan'] == plan]
-                                    filtered_data = apply_filters(plan_data, ch_filter, [])
-                                    if not filtered_data.empty and month in filtered_data.columns:
-                                        plan_value = filtered_data[month].sum()
+                                    plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                    if not plan_data.empty and month in plan_data.columns:
+                                        plan_value = plan_data[month].sum()
                                         month_cv_to_total += plan_value
                                 
                                 cv_trend_data['volume_actual'].append(month_cv_from_total)
                                 cv_trend_data['acq_actual'].append(month_cv_to_total)
                                 
                                 # 計画CV率計算
-                                if budget_df is not None:
+                                if filtered_budget_df is not None:
                                     budget_cv_from_total = 0
                                     budget_cv_to_total = 0
                                     
                                     for plan in cv_from_plans:
-                                        budget_plan_data = budget_df[budget_df['plan'] == plan]
-                                        filtered_budget = apply_filters(budget_plan_data, ch_filter, [])
-                                        if not filtered_budget.empty and month in filtered_budget.columns:
-                                            budget_cv_from_total += filtered_budget[month].sum()
+                                        budget_plan_data = filtered_budget_df[filtered_budget_df['plan'] == plan]
+                                        if not budget_plan_data.empty and month in budget_plan_data.columns:
+                                            budget_cv_from_total += budget_plan_data[month].sum()
                                     
                                     for plan in cv_to_plans:
-                                        budget_plan_data = budget_df[budget_df['plan'] == plan]
-                                        filtered_budget = apply_filters(budget_plan_data, ch_filter, [])
-                                        if not filtered_budget.empty and month in filtered_budget.columns:
-                                            budget_cv_to_total += filtered_budget[month].sum()
+                                        budget_plan_data = filtered_budget_df[filtered_budget_df['plan'] == plan]
+                                        if not budget_plan_data.empty and month in budget_plan_data.columns:
+                                            budget_cv_to_total += budget_plan_data[month].sum()
                                     
                                     budget_cv = (budget_cv_to_total / budget_cv_from_total * 100) if budget_cv_from_total > 0 else 0
                                     cv_trend_data['cv_budget_values'].append(budget_cv)
@@ -819,44 +816,38 @@ def register_tab1_callbacks(app):
                 indicators_budget = get_dataframe_from_store(data, 'indicators', 'budget')
                 
                 if indicators_actual is not None and indicators_budget is not None:
+                    # 全体データを一度フィルタリング（効率化のため）
+                    ch_filter = [channel_filter_tab1] if channel_filter_tab1 else []
+                    filtered_indicators_actual = apply_filters(indicators_actual, ch_filter, [])
+                    filtered_indicators_budget = apply_filters(indicators_budget, ch_filter, [])
+                    
                     for stage_def in stage_definitions:
-                        # チャネルフィルタの設定
-                        ch_filter = [channel_filter_tab1] if channel_filter_tab1 else []
-                        
                         from_total_actual = 0
                         to_total_actual = 0
                         from_total_budget = 0
                         to_total_budget = 0
                         
-                        # FROM側のデータ集計（チャネルフィルタ適用）
+                        # FROM側のデータ集計（事前フィルタリング済みデータを使用）
                         for plan in stage_def['from_plans']:
-                            plan_actual = indicators_actual[indicators_actual['plan'] == plan]
-                            plan_budget = indicators_budget[indicators_budget['plan'] == plan]
+                            plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                            plan_budget = filtered_indicators_budget[filtered_indicators_budget['plan'] == plan]
                             
-                            # チャネルフィルタを適用
-                            filtered_actual = apply_filters(plan_actual, ch_filter, [])
-                            filtered_budget = apply_filters(plan_budget, ch_filter, [])
+                            if not plan_actual.empty and selected_month in plan_actual.columns:
+                                from_total_actual += plan_actual[selected_month].sum()
                             
-                            if not filtered_actual.empty and selected_month in filtered_actual.columns:
-                                from_total_actual += filtered_actual[selected_month].sum()
-                            
-                            if not filtered_budget.empty and selected_month in filtered_budget.columns:
-                                from_total_budget += filtered_budget[selected_month].sum()
+                            if not plan_budget.empty and selected_month in plan_budget.columns:
+                                from_total_budget += plan_budget[selected_month].sum()
                         
-                        # TO側のデータ集計（チャネルフィルタ適用）
+                        # TO側のデータ集計（事前フィルタリング済みデータを使用）
                         for plan in stage_def['to_plans']:
-                            plan_actual = indicators_actual[indicators_actual['plan'] == plan]
-                            plan_budget = indicators_budget[indicators_budget['plan'] == plan]
+                            plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                            plan_budget = filtered_indicators_budget[filtered_indicators_budget['plan'] == plan]
                             
-                            # チャネルフィルタを適用
-                            filtered_actual = apply_filters(plan_actual, ch_filter, [])
-                            filtered_budget = apply_filters(plan_budget, ch_filter, [])
+                            if not plan_actual.empty and selected_month in plan_actual.columns:
+                                to_total_actual += plan_actual[selected_month].sum()
                             
-                            if not filtered_actual.empty and selected_month in filtered_actual.columns:
-                                to_total_actual += filtered_actual[selected_month].sum()
-                            
-                            if not filtered_budget.empty and selected_month in filtered_budget.columns:
-                                to_total_budget += filtered_budget[selected_month].sum()
+                            if not plan_budget.empty and selected_month in plan_budget.columns:
+                                to_total_budget += plan_budget[selected_month].sum()
                         
                         # CV率計算
                         cv_rate_actual = (to_total_actual / from_total_actual * 100) if from_total_actual > 0 else 0
@@ -875,32 +866,24 @@ def register_tab1_callbacks(app):
                             month_to_budget = 0
                             
                             for plan in stage_def['from_plans']:
-                                plan_actual = indicators_actual[indicators_actual['plan'] == plan]
-                                plan_budget = indicators_budget[indicators_budget['plan'] == plan]
+                                plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                plan_budget = filtered_indicators_budget[filtered_indicators_budget['plan'] == plan]
                                 
-                                # チャネルフィルタを適用
-                                filtered_actual = apply_filters(plan_actual, ch_filter, [])
-                                filtered_budget = apply_filters(plan_budget, ch_filter, [])
+                                if not plan_actual.empty and month in plan_actual.columns:
+                                    month_from_actual += plan_actual[month].sum()
                                 
-                                if not filtered_actual.empty and month in filtered_actual.columns:
-                                    month_from_actual += filtered_actual[month].sum()
-                                
-                                if not filtered_budget.empty and month in filtered_budget.columns:
-                                    month_from_budget += filtered_budget[month].sum()
+                                if not plan_budget.empty and month in plan_budget.columns:
+                                    month_from_budget += plan_budget[month].sum()
                             
                             for plan in stage_def['to_plans']:
-                                plan_actual = indicators_actual[indicators_actual['plan'] == plan]
-                                plan_budget = indicators_budget[indicators_budget['plan'] == plan]
+                                plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                plan_budget = filtered_indicators_budget[filtered_indicators_budget['plan'] == plan]
                                 
-                                # チャネルフィルタを適用
-                                filtered_actual = apply_filters(plan_actual, ch_filter, [])
-                                filtered_budget = apply_filters(plan_budget, ch_filter, [])
+                                if not plan_actual.empty and month in plan_actual.columns:
+                                    month_to_actual += plan_actual[month].sum()
                                 
-                                if not filtered_actual.empty and month in filtered_actual.columns:
-                                    month_to_actual += filtered_actual[month].sum()
-                                
-                                if not filtered_budget.empty and month in filtered_budget.columns:
-                                    month_to_budget += filtered_budget[month].sum()
+                                if not plan_budget.empty and month in plan_budget.columns:
+                                    month_to_budget += plan_budget[month].sum()
                             
                             # 月別CV率
                             month_cv_actual = (month_to_actual / month_from_actual * 100) if month_from_actual > 0 else 0
@@ -915,13 +898,12 @@ def register_tab1_callbacks(app):
                         # 実際にCV率データ（分母>0）がある最後の月を探す
                         valid_months = 0
                         for i, month in enumerate(month_cols):
-                            # 分母データを確認
+                            # 分母データを確認（事前フィルタリング済みデータを使用）
                             month_from_actual = 0
                             for plan in stage_def['from_plans']:
-                                plan_actual = indicators_actual[indicators_actual['plan'] == plan]
-                                filtered_actual = apply_filters(plan_actual, ch_filter, [])
-                                if not filtered_actual.empty and month in filtered_actual.columns:
-                                    month_from_actual += filtered_actual[month].sum()
+                                plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                if not plan_actual.empty and month in plan_actual.columns:
+                                    month_from_actual += plan_actual[month].sum()
                             
                             if month_from_actual > 0:
                                 valid_months = i + 1

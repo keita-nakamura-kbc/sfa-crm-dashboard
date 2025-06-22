@@ -416,26 +416,8 @@ def get_monthly_trend_data(data, section, data_type, period_type, channel_filter
                 # プランでフィルター（チャネルフィルターは適用しない）
                 filtered_df = apply_filters(filtered_df, None, plan_filter)
             elif target_item and 'channel' in filtered_df.columns:
-                # チャネルでフィルター - 正規化してマッチング
-                # チャネル名の逆マッピング（表示名→内部名）
-                channel_mapping = {
-                    '新規web': '新規（WEB）',
-                    '新規法人': '新規（法人）',
-                    '新規代理店': '新規（代理店）',
-                    'フロー': ['フロー①', 'フロー②', 'フロー③', 'フロー④', 'フロー⑤', 'フロー'],
-                    '既存': ['既存', '既存（25年以前）']
-                }
-                
-                if target_item in channel_mapping:
-                    internal_names = channel_mapping[target_item]
-                    if isinstance(internal_names, list):
-                        filtered_df = filtered_df[filtered_df['channel'].isin(internal_names)]
-                    else:
-                        filtered_df = filtered_df[filtered_df['channel'] == internal_names]
-                else:
-                    filtered_df = filtered_df[filtered_df['channel'] == target_item]
-                # target_itemが指定されている場合は、追加のチャネルフィルターは適用しない
-                filtered_df = apply_filters(filtered_df, None, plan_filter)
+                # チャネルでフィルター - 正規化してマッチング（apply_filtersを使用）
+                filtered_df = apply_filters(filtered_df, [target_item], plan_filter)
             else:
                 # 通常のフィルター適用
                 filtered_df = apply_filters(filtered_df, channel_filter, plan_filter)
@@ -492,27 +474,8 @@ def get_monthly_trend_data(data, section, data_type, period_type, channel_filter
                 # プランでフィルター（チャネルフィルターは適用しない）
                 filtered_budget_df = apply_filters(filtered_budget_df, None, plan_filter)
             elif target_item and 'channel' in filtered_budget_df.columns:
-                # チャネルでフィルター - 正規化してマッチング
-                # チャネル名の逆マッピング（表示名→内部名）
-                channel_mapping = {
-                    '新規web': '新規（WEB）',
-                    '新規法人': '新規（法人）',
-                    '新規代理店': '新規（代理店）',
-                    'フロー': ['フロー①', 'フロー②', 'フロー③', 'フロー④', 'フロー⑤', 'フロー'],
-                    '既存': ['既存', '既存（25年以前）']
-                }
-                
-                if target_item in channel_mapping:
-                    internal_names = channel_mapping[target_item]
-                    if isinstance(internal_names, list):
-                        filtered_budget_df = filtered_budget_df[filtered_budget_df['channel'].isin(internal_names)]
-                    else:
-                        filtered_budget_df = filtered_budget_df[filtered_budget_df['channel'] == internal_names]
-                else:
-                    filtered_budget_df = filtered_budget_df[filtered_budget_df['channel'] == target_item]
-                
-                # target_itemが指定されている場合は、追加のチャネルフィルターは適用しない
-                filtered_budget_df = apply_filters(filtered_budget_df, None, plan_filter)
+                # チャネルでフィルター - 正規化してマッチング（apply_filtersを使用）
+                filtered_budget_df = apply_filters(filtered_budget_df, [target_item], plan_filter)
             else:
                 # 通常のフィルター適用
                 filtered_budget_df = apply_filters(filtered_budget_df, channel_filter, plan_filter)
