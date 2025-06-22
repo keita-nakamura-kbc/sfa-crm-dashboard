@@ -474,49 +474,17 @@ def register_tab2_callbacks(app):
                 channels = clean_channel_names(actual_df['channel'].unique())
                 data_dict = {'actual': {}, 'budget': {}}
                 
-                # 各チャネルごとのデータを取得
+                # 各チャネルごとのデータを取得（calculate_kpi_values()と同じロジックを使用）
                 for channel in channels:
-                    # チャネルごとにフィルタリング
-                    filtered_actual = apply_filters(actual_df, [channel], current_plan_filter)
-                    filtered_budget = apply_filters(budget_df, [channel], current_plan_filter)
+                    # calculate_kpi_values()と同じ計算方法を使用
+                    actual_val, budget_val = calculate_kpi_values(
+                        data, data_key, selected_month, data_type, period_type,
+                        [channel], current_plan_filter
+                    )
                     
-                    if not filtered_actual.empty and not filtered_budget.empty:
-                        # 選択された月の実績と計画値を取得
-                        if selected_month in filtered_actual.columns:
-                            if analysis_type == 'revenue':
-                                actual_val = format_number(filtered_actual[selected_month].sum())
-                            else:
-                                # 獲得の場合：累月データから単月に変換
-                                month_idx = [col for col in filtered_actual.columns if col.endswith('月')].index(selected_month)
-                                current_actual = filtered_actual[selected_month].sum()
-                                if month_idx > 0:
-                                    month_cols_list = [col for col in filtered_actual.columns if col.endswith('月')]
-                                    prev_month = month_cols_list[month_idx - 1]
-                                    prev_actual = filtered_actual[prev_month].sum() if prev_month in filtered_actual.columns else 0
-                                    actual_val = format_number(max(0, current_actual - prev_actual))
-                                else:
-                                    actual_val = format_number(current_actual)
-                            data_dict['actual'][channel] = actual_val
-                        else:
-                            data_dict['actual'][channel] = 0
-                        
-                        if selected_month in filtered_budget.columns:
-                            if analysis_type == 'revenue':
-                                budget_val = format_number(filtered_budget[selected_month].sum())
-                            else:
-                                # 獲得の場合：累月データから単月に変換
-                                month_idx = [col for col in filtered_budget.columns if col.endswith('月')].index(selected_month)
-                                current_budget = filtered_budget[selected_month].sum()
-                                if month_idx > 0:
-                                    month_cols_list = [col for col in filtered_budget.columns if col.endswith('月')]
-                                    prev_month = month_cols_list[month_idx - 1]
-                                    prev_budget = filtered_budget[prev_month].sum() if prev_month in filtered_budget.columns else 0
-                                    budget_val = format_number(max(0, current_budget - prev_budget))
-                                else:
-                                    budget_val = format_number(current_budget)
-                            data_dict['budget'][channel] = budget_val
-                        else:
-                            data_dict['budget'][channel] = 0
+                    # フォーマット処理
+                    data_dict['actual'][channel] = format_number(actual_val) if actual_val > 0 else 0
+                    data_dict['budget'][channel] = format_number(budget_val) if budget_val > 0 else 0
                 
                 # チャート作成（横棒グラフ、積み上げ比較モード）
                 value_type = 'currency' if analysis_type == 'revenue' else 'count'
@@ -575,49 +543,17 @@ def register_tab2_callbacks(app):
                 plans = clean_plan_names(actual_df['plan'].unique())
                 data_dict = {'actual': {}, 'budget': {}}
                 
-                # 各プランごとのデータを取得
+                # 各プランごとのデータを取得（calculate_kpi_values()と同じロジックを使用）
                 for plan in plans:
-                    # プランごとにフィルタリング
-                    filtered_actual = apply_filters(actual_df, current_channel_filter, [plan])
-                    filtered_budget = apply_filters(budget_df, current_channel_filter, [plan])
+                    # calculate_kpi_values()と同じ計算方法を使用
+                    actual_val, budget_val = calculate_kpi_values(
+                        data, data_key, selected_month, data_type, period_type,
+                        current_channel_filter, [plan]
+                    )
                     
-                    if not filtered_actual.empty and not filtered_budget.empty:
-                        # 選択された月の実績と計画値を取得
-                        if selected_month in filtered_actual.columns:
-                            if analysis_type == 'revenue':
-                                actual_val = format_number(filtered_actual[selected_month].sum())
-                            else:
-                                # 獲得の場合：累月データから単月に変換
-                                month_idx = [col for col in filtered_actual.columns if col.endswith('月')].index(selected_month)
-                                current_actual = filtered_actual[selected_month].sum()
-                                if month_idx > 0:
-                                    month_cols_list = [col for col in filtered_actual.columns if col.endswith('月')]
-                                    prev_month = month_cols_list[month_idx - 1]
-                                    prev_actual = filtered_actual[prev_month].sum() if prev_month in filtered_actual.columns else 0
-                                    actual_val = format_number(max(0, current_actual - prev_actual))
-                                else:
-                                    actual_val = format_number(current_actual)
-                            data_dict['actual'][plan] = actual_val
-                        else:
-                            data_dict['actual'][plan] = 0
-                        
-                        if selected_month in filtered_budget.columns:
-                            if analysis_type == 'revenue':
-                                budget_val = format_number(filtered_budget[selected_month].sum())
-                            else:
-                                # 獲得の場合：累月データから単月に変換
-                                month_idx = [col for col in filtered_budget.columns if col.endswith('月')].index(selected_month)
-                                current_budget = filtered_budget[selected_month].sum()
-                                if month_idx > 0:
-                                    month_cols_list = [col for col in filtered_budget.columns if col.endswith('月')]
-                                    prev_month = month_cols_list[month_idx - 1]
-                                    prev_budget = filtered_budget[prev_month].sum() if prev_month in filtered_budget.columns else 0
-                                    budget_val = format_number(max(0, current_budget - prev_budget))
-                                else:
-                                    budget_val = format_number(current_budget)
-                            data_dict['budget'][plan] = budget_val
-                        else:
-                            data_dict['budget'][plan] = 0
+                    # フォーマット処理
+                    data_dict['actual'][plan] = format_number(actual_val) if actual_val > 0 else 0
+                    data_dict['budget'][plan] = format_number(budget_val) if budget_val > 0 else 0
                 
                 # チャート作成（横棒グラフ、積み上げ比較モード）
                 value_type = 'currency' if analysis_type == 'revenue' else 'count'

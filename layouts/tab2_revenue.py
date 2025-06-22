@@ -51,156 +51,78 @@ def create_revenue_acquisition_layout():
                     'flexDirection': 'column'
                 }),
                 
-                # 左半分-下半分: 左右に分かれた4つの小セクション（40%）
+                # 左半分-下半分: 継続率と客単価分析（横並び）（40%）
                 html.Div([
-                    # 左半分: 継続率と客単価分析（横並び）
+                    # 継続率
                     html.Div([
-                        # 継続率
                         html.Div([
-                            html.Div([
-                                html.I(className="fas fa-sync-alt", style={'marginRight': '4px'}),
-                                html.H3("継続率", 
-                                    **{
-                                        'role': 'heading',
-                                        'aria-level': '3'
-                                    },
-                                    className='text-subheading',
-                                    style={'margin': '0', 'fontSize': '0.8rem', 'lineHeight': '1.1'})
-                            ], className='flex-row items-center card-header',
-                            style={
-                                'backgroundColor': '#4a5568',  # タブ1と同じタイトルバー色
-                                'borderBottom': '1px solid #2d3748',
-                                'flexShrink': 0,
-                                'padding': '4px',
-                                'marginBottom': '2px'
-                            }),
-                            html.Div(id='retention-rate-cards',
-                                    className='p-m',
-                                    style={
-                                        'flex': '1 1 auto',
-                                        'overflowY': 'auto',
-                                        'minHeight': '0'
-                                    })
-                        ], 
-                        className='card-base',
+                            html.I(className="fas fa-sync-alt", style={'marginRight': '4px'}),
+                            html.H3("継続率", 
+                                **{
+                                    'role': 'heading',
+                                    'aria-level': '3'
+                                },
+                                className='text-subheading',
+                                style={'margin': '0', 'fontSize': '0.8rem', 'lineHeight': '1.1'})
+                        ], className='flex-row items-center card-header',
                         style={
-                            'height': '100%',
-                            'display': 'flex',
-                            'flexDirection': 'column',
-                            'flex': '1',
-                            'overflow': 'hidden'
+                            'backgroundColor': '#4a5568',
+                            'borderBottom': '1px solid #2d3748',
+                            'flexShrink': 0,
+                            'padding': '4px',
+                            'marginBottom': '2px'
                         }),
-                        
-                        # 客単価分析
-                        html.Div([
-                            html.Div([
-                                html.I(className="fas fa-yen-sign", style={'marginRight': '4px'}),
-                                html.H3("客単価分析", 
-                                    **{
-                                        'role': 'heading',
-                                        'aria-level': '3'
-                                    },
-                                    className='text-subheading',
-                                    style={'margin': '0', 'fontSize': '0.8rem', 'lineHeight': '1.1'})
-                            ], className='flex-row items-center card-header',
-                            style={
-                                'backgroundColor': '#4a5568',  # タブ1と同じタイトルバー色
-                                'borderBottom': '1px solid #2d3748',
-                                'flexShrink': 0,
-                                'padding': '4px',
-                                'marginBottom': '2px'
-                            }),
-                            html.Div(id='unit-price-analysis-cards',
-                                    className='p-m',
-                                    style={
-                                        'flex': '1 1 auto',
-                                        'overflowY': 'auto',
-                                        'minHeight': '0'
-                                    })
-                        ], 
-                        className='card-base',
-                        style={
-                            'height': '100%',
-                            'display': 'flex',
-                            'flexDirection': 'column',
-                            'flex': '1',
-                            'overflow': 'hidden'
-                        })
-                    ], style={
-                        'display': 'flex',
-                        'flexDirection': 'row',
-                        'gap': '8px',
+                        html.Div(id='retention-rate-cards',
+                                className='p-m',
+                                style={
+                                    'flex': '1 1 auto',
+                                    'overflowY': 'auto',
+                                    'minHeight': '0'
+                                })
+                    ], 
+                    className='card-base',
+                    style={
                         'height': '100%',
-                        'flex': '2'
-                    }),
-                    
-                    # 右半分: 構成チャート（縦並び）
-                    html.Div([
-                        # 構成（経路別）- 動的タイトル
-                        html.Div([
-                            html.Div(id='composition-channel-title', 
-                                className='card-header',
-                                style={
-                                    'textAlign': 'center',
-                                    'fontSize': '0.7rem',
-                                    'fontWeight': '600',
-                                    'color': DARK_COLORS['text_primary'],
-                                    'padding': '2px',
-                                    'margin': '0',
-                                    'backgroundColor': '#4a5568',  # タブ1と同じタイトルバー色
-                                    'borderBottom': '1px solid #2d3748'
-                                }
-                            ),
-                            html.Div([
-                                dcc.Graph(id='composition-channel-chart',
-                                         style={'height': '100%', 'minHeight': '0'},
-                                         config=PLOTLY_CONFIG)
-                            ], className='p-m', style={'flex': '1 1 auto', 'minHeight': '0'})
-                        ], 
-                        className='card-base',
-                        style={
-                            'height': '100%',
-                            'display': 'flex',
-                            'flexDirection': 'column',
-                            'flex': '1',
-                            'overflow': 'hidden'
-                        }),
-                        
-                        # 構成（アプリ別）- 動的タイトル
-                        html.Div([
-                            html.Div(id='composition-app-title', 
-                                className='card-header',
-                                style={
-                                    'textAlign': 'center',
-                                    'fontSize': '0.7rem',
-                                    'fontWeight': '600',
-                                    'color': DARK_COLORS['text_primary'],
-                                    'padding': '2px',
-                                    'margin': '0',
-                                    'backgroundColor': '#4a5568',  # タブ1と同じタイトルバー色
-                                    'borderBottom': '1px solid #2d3748'
-                                }
-                            ),
-                            html.Div([
-                                dcc.Graph(id='composition-app-chart',
-                                         style={'height': '100%', 'minHeight': '0'},
-                                         config=PLOTLY_CONFIG)
-                            ], className='p-m', style={'flex': '1 1 auto', 'minHeight': '0'})
-                        ], 
-                        className='card-base',
-                        style={
-                            'height': '100%',
-                            'display': 'flex',
-                            'flexDirection': 'column',
-                            'flex': '1',
-                            'overflow': 'hidden'
-                        })
-                    ], style={
                         'display': 'flex',
                         'flexDirection': 'column',
-                        'gap': '8px',
+                        'flex': '1',
+                        'overflow': 'hidden'
+                    }),
+                    
+                    # 客単価分析
+                    html.Div([
+                        html.Div([
+                            html.I(className="fas fa-yen-sign", style={'marginRight': '4px'}),
+                            html.H3("客単価分析", 
+                                **{
+                                    'role': 'heading',
+                                    'aria-level': '3'
+                                },
+                                className='text-subheading',
+                                style={'margin': '0', 'fontSize': '0.8rem', 'lineHeight': '1.1'})
+                        ], className='flex-row items-center card-header',
+                        style={
+                            'backgroundColor': '#4a5568',
+                            'borderBottom': '1px solid #2d3748',
+                            'flexShrink': 0,
+                            'padding': '4px',
+                            'marginBottom': '2px'
+                        }),
+                        html.Div(id='unit-price-analysis-cards',
+                                className='p-m',
+                                style={
+                                    'flex': '1 1 auto',
+                                    'overflowY': 'auto',
+                                    'minHeight': '0'
+                                })
+                    ], 
+                    className='card-base',
+                    style={
                         'height': '100%',
-                        'flex': '2'
+                        'display': 'flex',
+                        'flexDirection': 'column',
+                        'flex': '1',
+                        'overflow': 'hidden'
                     })
                 ], 
                 style={
@@ -219,16 +141,113 @@ def create_revenue_acquisition_layout():
             
             # 右半分
             html.Div([
-                # 右半分-左半分: 経路別カード
-                make_scroll_card_with_dynamic_title("経路別カード", "channel-cards", "detail-channel-title"),
+                # 右半分-左側: 経路別（上：獲得数、下：構成）
+                html.Div([
+                    # 獲得数 - 経路別カード（上部60%）
+                    html.Div([
+                        make_scroll_card_with_dynamic_title("経路別カード", "channel-cards", "detail-channel-title")
+                    ], style={
+                        'height': '60%',
+                        'paddingBottom': '8px'
+                    }),
+                    
+                    # 獲得構成（経路別）チャート（下部40%）
+                    html.Div([
+                        html.Div([
+                            html.Div(id='composition-channel-title', 
+                                className='card-header',
+                                style={
+                                    'textAlign': 'center',
+                                    'fontSize': '0.7rem',
+                                    'fontWeight': '600',
+                                    'color': DARK_COLORS['text_primary'],
+                                    'padding': '2px',
+                                    'margin': '0',
+                                    'backgroundColor': '#4a5568',
+                                    'borderBottom': '1px solid #2d3748'
+                                }
+                            ),
+                            html.Div([
+                                dcc.Graph(id='composition-channel-chart',
+                                         style={'height': '100%', 'minHeight': '0'},
+                                         config=PLOTLY_CONFIG)
+                            ], className='p-m', style={'flex': '1 1 auto', 'minHeight': '0'})
+                        ], 
+                        className='card-base',
+                        style={
+                            'height': '100%',
+                            'display': 'flex',
+                            'flexDirection': 'column',
+                            'flex': '1',
+                            'overflow': 'hidden'
+                        })
+                    ], style={
+                        'height': '40%',
+                        'paddingTop': '8px'
+                    })
+                ], style={
+                    'display': 'flex',
+                    'flexDirection': 'column',
+                    'height': '100%',
+                    'flex': '1'
+                }),
                 
-                # 右半分-右半分: プラン別カード
-                make_scroll_card_with_dynamic_title("プラン別カード", "plan-cards", "detail-plan-title")
+                # 右半分-右側: プラン別（上：獲得数、下：構成）
+                html.Div([
+                    # 獲得数 - プラン別カード（上部60%）
+                    html.Div([
+                        make_scroll_card_with_dynamic_title("プラン別カード", "plan-cards", "detail-plan-title")
+                    ], style={
+                        'height': '60%',
+                        'paddingBottom': '8px'
+                    }),
+                    
+                    # 獲得構成（プラン別）チャート（下部40%）
+                    html.Div([
+                        html.Div([
+                            html.Div(id='composition-app-title', 
+                                className='card-header',
+                                style={
+                                    'textAlign': 'center',
+                                    'fontSize': '0.7rem',
+                                    'fontWeight': '600',
+                                    'color': DARK_COLORS['text_primary'],
+                                    'padding': '2px',
+                                    'margin': '0',
+                                    'backgroundColor': '#4a5568',
+                                    'borderBottom': '1px solid #2d3748'
+                                }
+                            ),
+                            html.Div([
+                                dcc.Graph(id='composition-app-chart',
+                                         style={'height': '100%', 'minHeight': '0'},
+                                         config=PLOTLY_CONFIG)
+                            ], className='p-m', style={'flex': '1 1 auto', 'minHeight': '0'})
+                        ], 
+                        className='card-base',
+                        style={
+                            'height': '100%',
+                            'display': 'flex',
+                            'flexDirection': 'column',
+                            'flex': '1',
+                            'overflow': 'hidden'
+                        })
+                    ], style={
+                        'height': '40%',
+                        'paddingTop': '8px'
+                    })
+                ], style={
+                    'display': 'flex',
+                    'flexDirection': 'column',
+                    'height': '100%',
+                    'flex': '1',
+                    'marginLeft': '16px'
+                })
             ], 
             style={
-                'display': 'grid',
-                'gridTemplateColumns': '1fr 1fr',
-                'gap': '16px',
+                'display': 'flex',
+                'flexDirection': 'row',
+                'gap': '0',
                 'height': '100%'
             })
         ], 
@@ -254,7 +273,7 @@ def make_scroll_card_with_dynamic_title(default_title, body_id, title_id):
         html.Div(id=title_id, children=default_title, 
                 className='flex-row items-center card-header',
                 style={
-                    'backgroundColor': '#4a5568',  # タブ1と同じタイトルバー色
+                    'backgroundColor': '#4a5568',
                     'borderBottom': '1px solid #2d3748',
                     'flexShrink': 0,
                     'padding': '4px',
