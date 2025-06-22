@@ -35,7 +35,7 @@ def register_tab2_callbacks(app):
                 "獲得数",
                 html.Div([
                     html.I(className="fas fa-route", style={'marginRight': '4px'}),
-                    html.H3("獲得構成（経路別）", 
+                    html.H3("獲得構成 - 経路別", 
                         **{
                             'role': 'heading',
                             'aria-level': '3'
@@ -45,7 +45,7 @@ def register_tab2_callbacks(app):
                 ], className='flex-row items-center'),
                 html.Div([
                     html.I(className="fas fa-tasks", style={'marginRight': '4px'}),
-                    html.H3("獲得構成（プラン別）", 
+                    html.H3("獲得構成 - プラン別", 
                         **{
                             'role': 'heading',
                             'aria-level': '3'
@@ -79,7 +79,7 @@ def register_tab2_callbacks(app):
                 "売上高",
                 html.Div([
                     html.I(className="fas fa-route", style={'marginRight': '4px'}),
-                    html.H3("売上構成（経路別）", 
+                    html.H3("売上構成 - 経路別", 
                         **{
                             'role': 'heading',
                             'aria-level': '3'
@@ -89,7 +89,7 @@ def register_tab2_callbacks(app):
                 ], className='flex-row items-center'),
                 html.Div([
                     html.I(className="fas fa-tasks", style={'marginRight': '4px'}),
-                    html.H3("売上構成（プラン別）", 
+                    html.H3("売上構成 - プラン別", 
                         **{
                             'role': 'heading',
                             'aria-level': '3'
@@ -410,8 +410,8 @@ def register_tab2_callbacks(app):
             
             # ソート処理
             if data_type == 'plan_ratio':
-                # 計画比の場合：達成率で昇順（低い順）
-                cards_data.sort(key=lambda x: x['achievement_rate'])
+                # 計画比の場合：0%・N/Aを最下段に、その他は達成率で昇順
+                cards_data.sort(key=lambda x: (x['achievement_rate'] == 0, x['achievement_rate'] if x['achievement_rate'] > 0 else float('inf')))
             else:
                 # 計画差の場合：計画差で昇順（低い順）
                 cards_data.sort(key=lambda x: x['plan_diff'])
@@ -652,8 +652,8 @@ def register_tab2_callbacks(app):
             
             # ソート処理
             if data_type == 'plan_ratio':
-                # 計画比の場合：達成率で昇順（低い順）
-                cards_data.sort(key=lambda x: x['achievement_rate'])
+                # 計画比の場合：0%・N/Aを最下段に、その他は達成率で昇順
+                cards_data.sort(key=lambda x: (x['achievement_rate'] == 0, x['achievement_rate'] if x['achievement_rate'] > 0 else float('inf')))
             else:
                 # 計画差の場合：計画差で昇順（低い順）
                 cards_data.sort(key=lambda x: x['plan_diff'])
@@ -755,8 +755,8 @@ def register_tab2_callbacks(app):
             
             # ソート処理
             if data_type == 'plan_ratio':
-                # 計画比の場合：達成率で昇順（低い順）
-                cards_data.sort(key=lambda x: x['achievement_rate'])
+                # 計画比の場合：0%・N/Aを最下段に、その他は達成率で昇順
+                cards_data.sort(key=lambda x: (x['achievement_rate'] == 0, x['achievement_rate'] if x['achievement_rate'] > 0 else float('inf')))
             else:
                 # 計画差の場合：計画差で昇順（低い順）
                 cards_data.sort(key=lambda x: x['plan_diff'])

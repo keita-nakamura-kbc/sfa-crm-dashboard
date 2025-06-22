@@ -721,7 +721,7 @@ def create_trend_item(channel, volume, cv_rate, volume_trend_data=None, cv_trend
                     html.Div(f"計画比: {round(achievement_rate)}%", style={
                         'fontSize': '0.6rem',
                         'fontWeight': '500',
-                        'color': DARK_COLORS['bg_dark'] if is_selected else DARK_COLORS['text_muted'],
+                        'color': DARK_COLORS['bg_dark'] if is_selected else get_performance_color(achievement_rate),
                         'marginRight': '8px'
                     }),
                     html.Div(f"計画: {round(cv_budget_rate)}%" if cv_budget_rate > 0 else "計画: N/A", style={

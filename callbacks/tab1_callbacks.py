@@ -12,7 +12,7 @@ from data_manager import (
 )
 from components.cards import (
     create_metric_card, create_channel_funnel, create_insight_card,
-    create_trend_item
+    create_trend_item, get_performance_color
 )
 from components.loading import create_chart_loading_placeholder, create_skeleton_card
 from config import INTEGRATED_STAGES, DARK_COLORS, LAYOUT, PLOTLY_CONFIG
@@ -470,7 +470,8 @@ def register_tab1_callbacks(app):
                                 channels.append(ch)
                         channels = channels[:4]
                     
-                    trend_items = []
+                    # チャネル別のデータを格納するリスト
+                    channel_data_list = []
                     for channel in channels:
                         # チャネルフィルターをapply_filtersと同じ形式で設定
                         ch_filter = [channel]
@@ -614,20 +615,44 @@ def register_tab1_callbacks(app):
                                 else:
                                     cv_trend_data['cv_budget_values'].append(0)
                             
-                            # カードを追加（フィルター状態を考慮）
+                            # チャネルデータを格納（後でソート用）
                             is_selected = (channel_filter_tab1 == channel)
-                            trend_items.append(
-                                create_trend_item(
-                                    channel, 
-                                    format_number(volume_total), 
-                                    cv_rate,
-                                    volume_trend_data=volume_trend,
-                                    cv_trend_data=cv_trend_data,
-                                    is_selected=is_selected
-                                )
-                            )
+                            
+                            # CV率の達成率を計算（選択月の予算CV率との比較）
+                            month_index = month_cols.index(selected_month) if selected_month in month_cols else -1
+                            if month_index >= 0 and month_index < len(cv_trend_data['cv_budget_values']):
+                                budget_cv_rate = cv_trend_data['cv_budget_values'][month_index]
+                            else:
+                                budget_cv_rate = 0
+                            cv_achievement_rate = (cv_rate / budget_cv_rate * 100) if budget_cv_rate > 0 else 0
+                            
+                            channel_data_list.append({
+                                'channel': channel,
+                                'volume_total': volume_total,
+                                'cv_rate': cv_rate,
+                                'cv_achievement_rate': cv_achievement_rate,
+                                'volume_trend_data': volume_trend,
+                                'cv_trend_data': cv_trend_data,
+                                'is_selected': is_selected
+                            })
                     
-                    # カードを通常のコンテナに配置（売上高 - プラン別と同じ）
+                    # CV率達成率でソート（0%・N/Aを最下段に配置）
+                    channel_data_list.sort(key=lambda x: (x['cv_achievement_rate'] == 0, x['cv_achievement_rate'] if x['cv_achievement_rate'] > 0 else float('inf')))
+                    
+                    # ソート済みのデータからトレンドカードを作成
+                    trend_items = []
+                    for data in channel_data_list:
+                        trend_items.append(
+                            create_trend_item(
+                                data['channel'], 
+                                format_number(data['volume_total']), 
+                                data['cv_rate'],
+                                volume_trend_data=data['volume_trend_data'],
+                                cv_trend_data=data['cv_trend_data'],
+                                is_selected=data['is_selected']
+                            )
+                        )
+                    
                     return trend_items
             
             return []
@@ -964,7 +989,7 @@ def register_tab1_callbacks(app):
                                         html.Div(f"計画比: {round(achievement_rate)}%", style={
                                             'fontSize': '0.6rem',
                                             'fontWeight': '500',
-                                            'color': DARK_COLORS['bg_dark'] if is_selected else DARK_COLORS['text_muted'],
+                                            'color': DARK_COLORS['bg_dark'] if is_selected else get_performance_color(achievement_rate),
                                             'marginRight': '8px'
                                         }),
                                         html.Div(f"計画: {round(cv_budget_rate)}%" if cv_budget_rate > 0 else "計画: N/A", style={
