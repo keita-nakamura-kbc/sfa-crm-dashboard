@@ -107,7 +107,7 @@ def create_funnel_analysis_layout():
                                         {'label': 'to 内諾', 'value': '3to4'},
                                         {'label': 'to 獲得', 'value': '4to5'}
                                     ],
-                                    value='3to4',
+                                    value='2to3',
                                     style={'width': '120px', 'fontSize': '0.65rem'},
                                     className='dark-dropdown-small'
                                 )
