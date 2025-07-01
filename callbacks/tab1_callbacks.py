@@ -10,6 +10,7 @@ from data_manager import (
     data_manager, get_dataframe_from_store, apply_filters,
     format_number, clean_channel_names
 )
+from utils.cv_rate_utils import calculate_cv_rate_with_lag, get_cv_type_from_stage_transition, calculate_cv_rate_trend_with_lag
 from components.cards import (
     create_metric_card, create_channel_funnel, create_insight_card,
     create_trend_item, get_performance_color
@@ -510,6 +511,9 @@ def register_tab1_callbacks(app):
                             if not plan_data.empty:
                                 cv_to_data_list.append(plan_data)
                         
+                        # 月列を最初に取得
+                        month_cols = [col for col in indicators_actual.columns if col.endswith('月')]
+                        
                         if selected_month in indicators_actual.columns:
                             # 選択されたボリュームの合計を計算
                             volume_total = 0
@@ -526,11 +530,32 @@ def register_tab1_callbacks(app):
                             for cv_to_data in cv_to_data_list:
                                 cv_to_total += cv_to_data[selected_month].sum() if not cv_to_data.empty else 0
                             
-                            # CV率を計算
-                            cv_rate = (cv_to_total / cv_from_total * 100) if cv_from_total > 0 else 0
+                            # CV率を計算（タイムラグを考慮）
+                            # CV率タイプを判定
+                            cv_type_mapping = {
+                                '1to2': 'to商談',
+                                '2to3': 'to具体検討',
+                                '3to4': 'to内諾',
+                                '4to5': 'to獲得'
+                            }
+                            cv_type = cv_type_mapping.get(cv_filter, 'to獲得')
+                            
+                            # タイムラグを考慮したCV率を計算
+                            try:
+                                cv_rate = calculate_cv_rate_with_lag(
+                                    filtered_indicators_actual[filtered_indicators_actual['plan'].isin(cv_from_plans)],
+                                    filtered_indicators_actual[filtered_indicators_actual['plan'].isin(cv_to_plans)],
+                                    selected_month,
+                                    cv_type,
+                                    channel,
+                                    month_cols
+                                )
+                            except Exception as e:
+                                logger.error(f"CV率計算エラー - channel:{channel}, cv_type:{cv_type}, month:{selected_month}, error:{str(e)}")
+                                # フォールバック: 従来の計算方法
+                                cv_rate = (cv_to_total / cv_from_total * 100) if cv_from_total > 0 else 0
                             
                             # ボリュームのトレンドデータを取得
-                            month_cols = [col for col in indicators_actual.columns if col.endswith('月')]
                             volume_trend = {
                                 'actual_values': [],
                                 'budget_values': []
@@ -563,54 +588,71 @@ def register_tab1_callbacks(app):
                                 else:
                                     volume_trend['budget_values'].append(0)
                             
-                            # CV率計算用のデータ準備
-                            cv_trend_data = {
-                                'volume_actual': [],
-                                'acq_actual': [],
-                                'cv_budget_values': []
-                            }
+                            # CV率計算用のデータ準備（タイムラグ適用）
+                            from_filtered_data = filtered_indicators_actual[filtered_indicators_actual['plan'].isin(cv_from_plans)]
+                            to_filtered_data = filtered_indicators_actual[filtered_indicators_actual['plan'].isin(cv_to_plans)]
                             
-                            # 月別データを取得
-                            
-                            for month in month_cols:
-                                # 実績データ - 選択されたCV率フィルタに基づく
-                                month_cv_from_total = 0
-                                month_cv_to_total = 0
+                            try:
+                                cv_trend_data = calculate_cv_rate_trend_with_lag(
+                                    from_filtered_data,
+                                    to_filtered_data,
+                                    cv_type,
+                                    channel,
+                                    month_cols
+                                )
+                            except Exception as e:
+                                logger.error(f"CV率トレンドデータ計算エラー - channel:{channel}, cv_type:{cv_type}, error:{str(e)}")
+                                # フォールバック: 従来の計算方法
+                                cv_trend_data = {
+                                    'volume_actual': [],
+                                    'acq_actual': [],
+                                    'cv_budget_values': []
+                                }
                                 
-                                for plan in cv_from_plans:
-                                    plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
-                                    if not plan_data.empty and month in plan_data.columns:
-                                        plan_value = plan_data[month].sum()
-                                        month_cv_from_total += plan_value
-                                    
-                                for plan in cv_to_plans:
-                                    plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
-                                    if not plan_data.empty and month in plan_data.columns:
-                                        plan_value = plan_data[month].sum()
-                                        month_cv_to_total += plan_value
-                                
-                                cv_trend_data['volume_actual'].append(month_cv_from_total)
-                                cv_trend_data['acq_actual'].append(month_cv_to_total)
-                                
-                                # 計画CV率計算
-                                if filtered_budget_df is not None:
-                                    budget_cv_from_total = 0
-                                    budget_cv_to_total = 0
+                                for month in month_cols:
+                                    # 実績データ
+                                    month_cv_from_total = 0
+                                    month_cv_to_total = 0
                                     
                                     for plan in cv_from_plans:
-                                        budget_plan_data = filtered_budget_df[filtered_budget_df['plan'] == plan]
-                                        if not budget_plan_data.empty and month in budget_plan_data.columns:
-                                            budget_cv_from_total += budget_plan_data[month].sum()
-                                    
+                                        plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                        if not plan_data.empty and month in plan_data.columns:
+                                            month_cv_from_total += plan_data[month].sum()
+                                        
                                     for plan in cv_to_plans:
-                                        budget_plan_data = filtered_budget_df[filtered_budget_df['plan'] == plan]
-                                        if not budget_plan_data.empty and month in budget_plan_data.columns:
-                                            budget_cv_to_total += budget_plan_data[month].sum()
+                                        plan_data = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
+                                        if not plan_data.empty and month in plan_data.columns:
+                                            month_cv_to_total += plan_data[month].sum()
                                     
-                                    budget_cv = (budget_cv_to_total / budget_cv_from_total * 100) if budget_cv_from_total > 0 else 0
-                                    cv_trend_data['cv_budget_values'].append(budget_cv)
-                                else:
+                                    cv_trend_data['volume_actual'].append(month_cv_from_total)
+                                    cv_trend_data['acq_actual'].append(month_cv_to_total)
                                     cv_trend_data['cv_budget_values'].append(0)
+                            
+                            # 計画CV率の計算（タイムラグ適用）
+                            if 'cv_budget_values' not in cv_trend_data:
+                                cv_budget_values = []
+                                if filtered_budget_df is not None:
+                                    from_budget_data = filtered_budget_df[filtered_budget_df['plan'].isin(cv_from_plans)]
+                                    to_budget_data = filtered_budget_df[filtered_budget_df['plan'].isin(cv_to_plans)]
+                                    
+                                    try:
+                                        for month in month_cols:
+                                            budget_cv = calculate_cv_rate_with_lag(
+                                                from_budget_data,
+                                                to_budget_data,
+                                                month,
+                                                cv_type,
+                                                channel,
+                                                month_cols
+                                            )
+                                            cv_budget_values.append(budget_cv)
+                                    except Exception as e:
+                                        logger.error(f"計画CV率計算エラー - channel:{channel}, cv_type:{cv_type}, error:{str(e)}")
+                                        cv_budget_values = [0] * len(month_cols)
+                                else:
+                                    cv_budget_values = [0] * len(month_cols)
+                                
+                                cv_trend_data['cv_budget_values'] = cv_budget_values
                             
                             # チャネルデータを格納（後でソート用）
                             is_selected = (channel_filter_tab1 == channel)
@@ -849,45 +891,72 @@ def register_tab1_callbacks(app):
                             if not plan_budget.empty and selected_month in plan_budget.columns:
                                 to_total_budget += plan_budget[selected_month].sum()
                         
-                        # CV率計算
-                        cv_rate_actual = (to_total_actual / from_total_actual * 100) if from_total_actual > 0 else 0
-                        cv_rate_budget = (to_total_budget / from_total_budget * 100) if from_total_budget > 0 else 0
+                        # CV率計算（タイムラグ適用）
+                        cv_type_mapping = {
+                            '1to2': 'to商談',
+                            '2to3': 'to具体検討', 
+                            '3to4': 'to内諾',
+                            '4to5': 'to獲得'
+                        }
+                        cv_type = cv_type_mapping.get(stage_def['id'], 'to獲得')
+                        current_channel = channel_filter_tab1 if channel_filter_tab1 else '新規web'  # デフォルトチャネル
                         
-                        # 月別のCV率トレンドデータを計算
                         month_cols = [col for col in indicators_actual.columns if col.endswith('月')]
+                        
+                        try:
+                            cv_rate_actual = calculate_cv_rate_with_lag(
+                                filtered_indicators_actual[filtered_indicators_actual['plan'].isin(stage_def['from_plans'])],
+                                filtered_indicators_actual[filtered_indicators_actual['plan'].isin(stage_def['to_plans'])],
+                                selected_month,
+                                cv_type,
+                                current_channel,
+                                month_cols
+                            )
+                            
+                            cv_rate_budget = calculate_cv_rate_with_lag(
+                                filtered_indicators_budget[filtered_indicators_budget['plan'].isin(stage_def['from_plans'])],
+                                filtered_indicators_budget[filtered_indicators_budget['plan'].isin(stage_def['to_plans'])],
+                                selected_month,
+                                cv_type,
+                                current_channel,
+                                month_cols
+                            )
+                        except Exception as e:
+                            logger.error(f"ステージCV率計算エラー - stage:{stage_def['id']}, channel:{current_channel}, error:{str(e)}")
+                            # フォールバック: 従来の計算方法
+                            cv_rate_actual = (to_total_actual / from_total_actual * 100) if from_total_actual > 0 else 0
+                            cv_rate_budget = (to_total_budget / from_total_budget * 100) if from_total_budget > 0 else 0
+                        
+                        # 月別のCV率トレンドデータを計算（タイムラグ適用）
                         cv_trend_actual = []
                         cv_trend_budget = []
                         
                         for month in month_cols:
-                            # 月別実績CV率計算
-                            month_from_actual = 0
-                            month_to_actual = 0
-                            month_from_budget = 0
-                            month_to_budget = 0
-                            
-                            for plan in stage_def['from_plans']:
-                                plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
-                                plan_budget = filtered_indicators_budget[filtered_indicators_budget['plan'] == plan]
+                            try:
+                                # 実績CV率（タイムラグ適用）
+                                month_cv_actual = calculate_cv_rate_with_lag(
+                                    filtered_indicators_actual[filtered_indicators_actual['plan'].isin(stage_def['from_plans'])],
+                                    filtered_indicators_actual[filtered_indicators_actual['plan'].isin(stage_def['to_plans'])],
+                                    month,
+                                    cv_type,
+                                    current_channel,
+                                    month_cols
+                                )
                                 
-                                if not plan_actual.empty and month in plan_actual.columns:
-                                    month_from_actual += plan_actual[month].sum()
-                                
-                                if not plan_budget.empty and month in plan_budget.columns:
-                                    month_from_budget += plan_budget[month].sum()
-                            
-                            for plan in stage_def['to_plans']:
-                                plan_actual = filtered_indicators_actual[filtered_indicators_actual['plan'] == plan]
-                                plan_budget = filtered_indicators_budget[filtered_indicators_budget['plan'] == plan]
-                                
-                                if not plan_actual.empty and month in plan_actual.columns:
-                                    month_to_actual += plan_actual[month].sum()
-                                
-                                if not plan_budget.empty and month in plan_budget.columns:
-                                    month_to_budget += plan_budget[month].sum()
-                            
-                            # 月別CV率
-                            month_cv_actual = (month_to_actual / month_from_actual * 100) if month_from_actual > 0 else 0
-                            month_cv_budget = (month_to_budget / month_from_budget * 100) if month_from_budget > 0 else 0
+                                # 計画CV率（タイムラグ適用）
+                                month_cv_budget = calculate_cv_rate_with_lag(
+                                    filtered_indicators_budget[filtered_indicators_budget['plan'].isin(stage_def['from_plans'])],
+                                    filtered_indicators_budget[filtered_indicators_budget['plan'].isin(stage_def['to_plans'])],
+                                    month,
+                                    cv_type,
+                                    current_channel,
+                                    month_cols
+                                )
+                            except Exception as e:
+                                logger.error(f"月別ステージCV率計算エラー - stage:{stage_def['id']}, month:{month}, error:{str(e)}")
+                                # フォールバック: 0を設定
+                                month_cv_actual = 0
+                                month_cv_budget = 0
                             
                             cv_trend_actual.append(month_cv_actual)
                             cv_trend_budget.append(month_cv_budget)

@@ -98,7 +98,7 @@ def create_header():
                                    **{'aria-label': '累計表示に切り替え', 'aria-pressed': 'true'}),
                         html.Button('単月', id='btn-single', className='control-button',
                                    **{'aria-label': '単月表示に切り替え', 'aria-pressed': 'false'})
-                    ], style={'marginRight': '12px'},
+                    ], id='period-toggle-container', style={'marginRight': '12px'},
                     **{'role': 'group', 'aria-label': '期間タイプの選択'}),
                     
                     # 獲得/売上切り替え（Tab2専用）

@@ -15,7 +15,9 @@
       "Bash(true)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(pip install:*)",
+      "Bash(pyinstaller:*)"
     ],
     "deny": []
   }

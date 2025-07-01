@@ -32,7 +32,10 @@ app = dash.Dash(__name__,
     suppress_callback_exceptions=True,
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"},
-    ]
+        {"http-equiv": "X-UA-Compatible", "content": "IE=edge"},  # Edge互換性
+    ],
+    # 長いコールバック対応を無効化（Edge互換性向上）
+    long_callback_manager=None
 )
 
 app.title = "SFA/CRM Analytics Dashboard"
@@ -53,7 +56,7 @@ app.index_string = f'''
 
             /* 全体スタイル */
             html, body {{
-                height: 100dvh;
+                height: 100vh;  /* dvhからvhに変更（Edge互換性） */
                 box-sizing: border-box;
             }}
             
@@ -68,7 +71,7 @@ app.index_string = f'''
             }}
             
             #react-entry-point, #_dash-app-content {{
-                height: 100dvh;
+                height: 100vh;  /* dvhからvhに変更（Edge互換性） */
                 box-sizing: border-box;
             }}
             
@@ -130,6 +133,21 @@ app.index_string = f'''
                 background: {DARK_COLORS['primary_orange']};
                 border-color: {DARK_COLORS['primary_orange']};
                 color: {DARK_COLORS['text_primary']};
+            }}
+            
+            .control-button:disabled {{
+                background: transparent;
+                border-color: {DARK_COLORS['border_color']};
+                color: {DARK_COLORS['text_muted']};
+                opacity: 0.5;
+                cursor: not-allowed;
+            }}
+            
+            .control-button.active:disabled {{
+                background: {DARK_COLORS['border_color']};
+                border-color: {DARK_COLORS['border_color']};
+                color: {DARK_COLORS['text_muted']};
+                opacity: 0.5;
             }}
 
             /* ビュータグルボタン */
@@ -487,7 +505,7 @@ app.index_string = f'''
 
             /* Tab2レイアウト修正 */
             .revenue-tab-wrapper {{
-                height: calc(100dvh - var(--header-height)) !important;
+                height: calc(100vh - var(--header-height)) !important;  /* dvhからvhに変更 */
                 overflow: hidden !important;
             }}
             
@@ -539,6 +557,7 @@ app.index_string = f'''
             {{%config%}}
             {{%scripts%}}
             {{%renderer%}}
+            <script src="/assets/edge-polyfill.js"></script>
         </footer>
     </body>
 </html>
@@ -583,7 +602,11 @@ app.layout = html.Div([
      Output('channel-filter-tab1-container', 'style'),
      Output('channel-filter-tab2-container', 'style'),
      Output('plan-filter-tab2-container', 'style'),
-     Output('acquisition-revenue-toggle-container', 'style')],
+     Output('acquisition-revenue-toggle-container', 'style'),
+     Output('btn-cumulative', 'disabled'),
+     Output('btn-single', 'disabled'),
+     Output('btn-cumulative', 'style'),
+     Output('btn-single', 'style')],
     [Input('tab-1-button', 'n_clicks'),
      Input('tab-2-button', 'n_clicks')],
     [State('active-tab', 'data')]
@@ -625,6 +648,11 @@ def render_tab_content(tab1_clicks, tab2_clicks, active_tab):
         tab2_channel_filter_style = {'marginRight': '12px', 'display': 'none'}
         tab2_plan_filter_style = {'marginRight': '24px', 'display': 'none'}
         acquisition_revenue_toggle_style = {'marginRight': '12px', 'display': 'none'}
+        # タブ1では累月/単月ボタンを無効化
+        cumulative_disabled = True
+        single_disabled = True
+        cumulative_style = {'marginRight': '4px', 'opacity': '0.5', 'cursor': 'not-allowed'}
+        single_style = {'opacity': '0.5', 'cursor': 'not-allowed'}
     else:
         tab1_style = get_tab_style(is_active=False, margin_right='8px')
         tab2_style = get_tab_style(is_active=True)
@@ -634,8 +662,15 @@ def render_tab_content(tab1_clicks, tab2_clicks, active_tab):
         tab2_channel_filter_style = {'marginRight': '12px', 'display': 'block'}
         tab2_plan_filter_style = {'marginRight': '24px', 'display': 'block'}
         acquisition_revenue_toggle_style = {'marginRight': '12px', 'display': 'block'}
+        # タブ2では累月/単月ボタンを有効化
+        cumulative_disabled = False
+        single_disabled = False
+        cumulative_style = {'marginRight': '4px'}
+        single_style = {}
     
-    return content, tab1_style, tab2_style, active_tab, tab1_filter_style, tab2_channel_filter_style, tab2_plan_filter_style, acquisition_revenue_toggle_style
+    return (content, tab1_style, tab2_style, active_tab, tab1_filter_style, 
+            tab2_channel_filter_style, tab2_plan_filter_style, acquisition_revenue_toggle_style,
+            cumulative_disabled, single_disabled, cumulative_style, single_style)
 
 # データアップロード処理（ローディング表示対応）
 @app.callback(
@@ -844,8 +879,54 @@ load_sample_data_on_startup()
 
 # アプリケーション実行
 if __name__ == '__main__':
-    app.run_server(
-        debug=True, 
-        port=8050,
-        host='0.0.0.0'  # ネットワーク内の他のデバイスからもアクセス可能
-    )
+    import sys
+    import os
+    import webbrowser
+    import threading
+    import time
+    
+    def open_browser():
+        """3秒待ってからブラウザを開く"""
+        time.sleep(3)
+        try:
+            webbrowser.open('http://localhost:8050')
+            logger.info("ブラウザが開きました")
+        except Exception as e:
+            logger.error(f"ブラウザを開けませんでした: {e}")
+            print("\n=== ダッシュボードアクセス情報 ===")
+            print("ブラウザで以下のURLにアクセスしてください:")
+            print("http://localhost:8050")
+            print("================================\n")
+    
+    # PyInstallerで実行されているかチェック
+    if getattr(sys, 'frozen', False):
+        # EXE実行時
+        print("\n=== SFA/CRM Analytics Dashboard ===")
+        print("サーバーを起動中...")
+        print("しばらくお待ちください...\n")
+        
+        # ブラウザを開くスレッドを開始
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
+        
+        debug_mode = False
+        host_ip = '127.0.0.1'
+    else:
+        # 開発時
+        debug_mode = True
+        host_ip = '0.0.0.0'
+    
+    try:
+        app.run_server(
+            debug=debug_mode,
+            port=8050,
+            host=host_ip,
+            dev_tools_hot_reload=False  # Edge互換性向上
+        )
+    except Exception as e:
+        logger.error(f"サーバー起動エラー: {e}")
+        print(f"\nエラー: {e}")
+        print("別のアプリケーションがポート8050を使用している可能性があります。")
+        if getattr(sys, 'frozen', False):
+            input("Enterキーを押して終了...")
