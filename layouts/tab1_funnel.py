@@ -80,7 +80,7 @@ def create_funnel_analysis_layout():
                 'minWidth': '0'   # 幅の制約も解除
             }),
             
-            # 右上：経路別CV率トレンド
+            # 経路別CV率トレンド
             html.Div([
                 html.Div([
                     html.Div([
@@ -153,7 +153,7 @@ def create_funnel_analysis_layout():
                 'aria-label': 'CV率トレンドセクション'
             }),
             
-            # 右下：ステージ別CV率トレンド
+            # ステージ別CV率トレンド
             html.Div([
                 html.Div([
                     html.Div([
@@ -206,10 +206,10 @@ def create_funnel_analysis_layout():
         style={
             'flex': '0 0 70%',
             'display': 'grid',
-            'gridTemplateColumns': 'minmax(0, 2fr) minmax(0, 1fr)',
+            'gridTemplateColumns': 'minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr)',
             'gridTemplateRows': 'minmax(0, 1fr) minmax(0, 1fr)',
             'gap': '16px',
-            'gridTemplateAreas': '"funnel trends" "funnel stage-trends"',
+            'gridTemplateAreas': '"funnel trends stage-trends" "funnel trends stage-trends"',
             'padding': '8px 16px',
             'boxSizing': 'border-box',
             'minHeight': '0'
